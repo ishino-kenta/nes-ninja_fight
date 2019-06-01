@@ -73,7 +73,7 @@ clearMemory:
 initBank:
     ldx #0
 .initBankLoop:
-    lda initbanktable, x
+    lda initBankTable, x
     stx $8000   ; select bank
     sta $8001   ; select data
     inx
@@ -97,6 +97,63 @@ LoadPalettes:
     inx
     cpx #$20
     bne .LoadPalettesLoop
+
+vblankWait3:
+    bit $2002
+    bpl vblankWait3
+
+TitleNametables:
+    lda $2002
+    lda #$20
+    sta $2006
+    lda #$00
+    sta $2006
+
+    lda #LOW(titleNametable)
+    sta tmp_addr_low
+    lda #HIGH(titleNametable)
+    sta tmp_addr_high
+
+    ldx #$00
+.TitleNametablesLoop1:
+
+    lda tmp_addr_low
+    add #$20
+    sta tmp_addr_low
+    lda tmp_addr_high
+    adc #$00
+    sta tmp_addr_high
+
+    ldy #$00
+.TitleNametablesLoop2:
+    lda [tmp_addr_low], y
+    sta $2007
+    iny
+    cpy #$20
+    bne .TitleNametablesLoop2
+    inx
+    cpx #$1E
+    bne .TitleNametablesLoop1
+
+TitleAttrs:
+    lda $2002
+    lda #$23
+    sta $2006
+    lda #$C0
+    sta $2006
+
+    lda #LOW(titleAttr)
+    sta tmp_addr_low
+    lda #HIGH(titleAttr)
+    sta tmp_addr_high
+
+    ldy #$00
+.TitleAttrsLoop:
+    lda [tmp_addr_low], y
+    sta $2007
+    iny
+    cpy #$20
+    bne .TitleAttrsLoop
 
 
 ;Variable initialize
@@ -136,13 +193,19 @@ NMI:
     inc general_counter
 
 GameEngine:
+
+GameTitle:
     lda game_state
     cmp #STATE_TITLE
-    beq EngineTitle
-
+    bne GamePlaying
+    jsr EngineTitle
+    jmp GameEngineDone
+GamePlaying:
     lda game_state
     cmp #STATE_PLAYING
-    beq EnginePlaying
+    bne GameEngineDone
+    jsr EnginePlaying
+
 GameEngineDone:
 
     rti
@@ -154,12 +217,81 @@ EngineTitle:
     lda buttons1
     and #%00010000
     beq NotStart
+    jsr LoadPlaying
+NotStart:
+    rts
+
+
+LoadPlaying:
     lda #STATE_PLAYING
     sta game_state
 
-NotStart:
+    lda #%00000000  ; disable NMI
+    sta $2000
+    lda #%00000000  ; disable spr/BG
+    sta $2001
 
-    jmp GameEngineDone
+PlayingNametables:
+    lda $2002
+    lda #$20
+    sta $2006
+    lda #$00
+    sta $2006
+
+    lda #LOW(playingNametable)
+    sta tmp_addr_low
+    lda #HIGH(playingNametable)
+    sta tmp_addr_high
+
+    ldx #$00
+.PlayingNametablesLoop1:
+
+    lda tmp_addr_low
+    add #$20
+    sta tmp_addr_low
+    lda tmp_addr_high
+    adc #$00
+    sta tmp_addr_high
+
+    ldy #$00
+.PlayingNametablesLoop2:
+    lda [tmp_addr_low], y
+    sta $2007
+    iny
+    cpy #$20
+    bne .PlayingNametablesLoop2
+    inx
+    cpx #$1E
+    bne .PlayingNametablesLoop1
+
+PlayingAttrs:
+    lda $2002
+    lda #$23
+    sta $2006
+    lda #$C0
+    sta $2006
+
+    lda #LOW(playingAttr)
+    sta tmp_addr_low
+    lda #HIGH(playingAttr)
+    sta tmp_addr_high
+
+    ldy #$00
+.PlayingAttrsLoop:
+    lda [tmp_addr_low], y
+    sta $2007
+    iny
+    cpy #$40
+    bne .PlayingAttrsLoop
+
+    lda #%10010000  ; enable NMI
+    sta $2000
+    lda #%00011110  ; enable spr/BG
+    sta $2001
+
+LoadPlayingDone:
+
+    rts
 
 ;Playing scene
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -180,7 +312,7 @@ EnginePlaying:
 
 
 
-    jmp GameEngineDone
+    rts
 
 ;IRQ
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -212,11 +344,21 @@ ReadController1:
 ;Some datas
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-initbanktable:
+initBankTable:
     .db $00,$02,$04,$05,$06,$07,$00,$00
 
 palette:
     .incbin "palette.pal"
+
+titleNametable:
+    .incbin "title.nt"
+titleAttr:
+    .incbin "title.atr"
+
+playingNametable:
+    .incbin "playing.nt"
+playingAttr:
+    .incbin "playing.atr"
 
 ;Vectors
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
