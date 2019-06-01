@@ -368,17 +368,6 @@ EnginePlaying:
     sta $2005
 
 
-Player1A:
-    lda buttons1
-    and #BUTTON_A
-    beq Player1Stelth
-    lda #$00
-    sta player1_stelth
-    jmp Player1ADone
-Player1Stelth:
-    lda #$10
-    sta player1_stelth
-Player1ADone:
 Player1Right:
     lda buttons1
     and #BUTTON_RIGHT
@@ -431,28 +420,36 @@ Player1Down:
     lda #WALL_BOTTOM-PLAYER1_HEIGHT
     sta player1_y
 Player1DownDone:
-
+Player1A:
+    lda buttons1
+    eor buttons1pre
+    and buttons1
+    and #BUTTON_A
+    beq Player1ADone
+    lda #$20
+    sta player1_stelth
+Player1ADone:
+Player1StelthDec:
+    lda player1_stelth
+    beq Player1StelthDecDone
+    dec player1_stelth
+Player1StelthDecDone:
 Player1SpriteUpdate:
     lda player1_y
     sta $0200
+    lda player1_stelth
+    bne .label1
+    lda #$0F
+    jmp .label2
+.label1:
     lda player1_spr
-    ora player1_stelth
+.label2:
     sta $0201
     lda player1_x
     sta $0203
 Player1SpriteUpdateDone:
 
-Player2A:
-    lda buttons2
-    and #BUTTON_A
-    beq Player2Stelth
-    lda #$00
-    sta player2_stelth
-    jmp Player2ADone
-Player2Stelth:
-    lda #$10
-    sta player2_stelth
-Player2ADone:
+
 Player2Right:
     lda buttons2
     and #BUTTON_RIGHT
@@ -505,13 +502,30 @@ Player2Down:
     lda #WALL_BOTTOM-PLAYER2_HEIGHT
     sta player2_y
 Player2DownDone:
-
-
+Player2A:
+    lda buttons2
+    eor buttons2pre
+    and buttons2
+    and #BUTTON_A
+    beq Player2ADone
+    lda #$20
+    sta player2_stelth
+Player2ADone:
+Player2StelthDec:
+    lda player2_stelth
+    beq Player2StelthDecDone
+    dec player2_stelth
+Player2StelthDecDone:
 Player2SpriteUpdate:
     lda player2_y
     sta $0204
+    lda player2_stelth
+    bne .label1
+    lda #$0F
+    jmp .label2
+.label1:
     lda player2_spr
-    ora player2_stelth
+.label2:
     sta $0205
     lda player2_x
     sta $0207
