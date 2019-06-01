@@ -1,0 +1,18 @@
+; .\main.asm
+LoadPalettes                     = $C052
+initBank                         = $C03D
+vblankWait1                      = $C019
+IRQ                              = $C0DC
+vblankWait2                      = $C04D
+Forever                          = $C084
+palette                          = $C102
+ReadController1                  = $C0DD
+clearMemory                      = $C01E
+EngineTitle                      = $C0AE
+RESET                            = $C000
+NotStart                         = $C0BA
+initbanktable                    = $C0FA
+NMI                              = $C087
+GameEngine                       = $C09F
+GameEngineDone                   = $C0AD
+EnginePlaying                    = $C0BD
