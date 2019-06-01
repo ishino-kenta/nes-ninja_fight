@@ -18,8 +18,12 @@ game_state  .rs 1
 
 player1_x   .rs 1
 player1_y   .rs 1
+player1_spr .rs 1
+player1_stelth  .rs 1
 player2_x   .rs 1
 player2_y   .rs 1
+player2_spr .rs 1
+player2_stelth  .rs 1
 
 tmp .rs 1
 tmp_addr_low    .rs 1
@@ -43,14 +47,14 @@ BUTTON_DOWN = $04
 BUTTON_LEFT = $02
 BUTTON_RIGHT = $01
 
-WALL_TOP = $18
-WALL_BOTTOM = $A8
+WALL_TOP = $17
+WALL_BOTTOM = $A7
 WALL_RIGHT = $F8
 WALL_LEFT = $08
 
-PLAYER1_WIDTH = $08
+PLAYER1_WIDTH = $07
 PLAYER1_HEIGHT = $08
-PLAYER2_WIDTH = $08
+PLAYER2_WIDTH = $07
 PLAYER2_HEIGHT = $08
 
 ;Declare some macros here
@@ -363,11 +367,25 @@ EnginePlaying:
     sta $2005
     sta $2005
 
+
+Player1A:
+    lda buttons1
+    and #BUTTON_A
+    beq Player1Stelth
+    lda #$00
+    sta player1_stelth
+    jmp Player1ADone
+Player1Stelth:
+    lda #$10
+    sta player1_stelth
+Player1ADone:
 Player1Right:
     lda buttons1
     and #BUTTON_RIGHT
     beq Player1RightDone
     inc player1_x
+    lda #$00
+    sta player1_spr
     lda player1_x
     cmp #WALL_RIGHT-PLAYER1_WIDTH
     bcc Player1RightDone
@@ -379,6 +397,8 @@ Player1Left:
     and #BUTTON_LEFT
     beq Player1LeftDone
     dec player1_x
+    lda #$01
+    sta player1_spr
     lda player1_x
     cmp #WALL_LEFT
     bcs Player1LeftDone
@@ -390,6 +410,8 @@ Player1Up:
     and #BUTTON_UP
     beq Player1UpDone
     dec player1_y
+    lda #$03
+    sta player1_spr
     lda player1_y
     cmp #WALL_TOP
     bcs Player1UpDone
@@ -401,6 +423,8 @@ Player1Down:
     and #BUTTON_DOWN
     beq Player1DownDone
     inc player1_y
+    lda #$02
+    sta player1_spr
     lda player1_y
     cmp #WALL_BOTTOM-PLAYER1_HEIGHT
     bcc Player1DownDone
@@ -411,16 +435,31 @@ Player1DownDone:
 Player1SpriteUpdate:
     lda player1_y
     sta $0200
+    lda player1_spr
+    ora player1_stelth
+    sta $0201
     lda player1_x
     sta $0203
 Player1SpriteUpdateDone:
 
-
+Player2A:
+    lda buttons2
+    and #BUTTON_A
+    beq Player2Stelth
+    lda #$00
+    sta player2_stelth
+    jmp Player2ADone
+Player2Stelth:
+    lda #$10
+    sta player2_stelth
+Player2ADone:
 Player2Right:
     lda buttons2
     and #BUTTON_RIGHT
     beq Player2RightDone
     inc player2_x
+    lda #$00
+    sta player2_spr
     lda player2_x
     cmp #WALL_RIGHT-PLAYER2_WIDTH
     bcc Player2RightDone
@@ -432,6 +471,8 @@ Player2Left:
     and #BUTTON_LEFT
     beq Player2LeftDone
     dec player2_x
+    lda #$01
+    sta player2_spr
     lda player2_x
     cmp #WALL_LEFT
     bcs Player2LeftDone
@@ -443,6 +484,8 @@ Player2Up:
     and #BUTTON_UP
     beq Player2UpDone
     dec player2_y
+    lda #$03
+    sta player2_spr
     lda player2_y
     cmp #WALL_TOP
     bcs Player2UpDone
@@ -454,6 +497,8 @@ Player2Down:
     and #BUTTON_DOWN
     beq Player2DownDone
     inc player2_y
+    lda #$02
+    sta player2_spr
     lda player2_y
     cmp #WALL_BOTTOM-PLAYER2_HEIGHT
     bcc Player2DownDone
@@ -465,6 +510,9 @@ Player2DownDone:
 Player2SpriteUpdate:
     lda player2_y
     sta $0204
+    lda player2_spr
+    ora player2_stelth
+    sta $0205
     lda player2_x
     sta $0207
 Player2SpriteUpdateDone:
