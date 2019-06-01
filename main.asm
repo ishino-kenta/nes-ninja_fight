@@ -14,6 +14,11 @@ buttons1pre .rs 1
 
 game_state  .rs 1
 
+player1_x   .rs 1
+player1_y   .rs 1
+player2_x   .rs 1
+player2_y   .rs 1
+
 tmp .rs 1
 tmp_addr_low    .rs 1
 tmp_addr_high   .rs 1
@@ -26,6 +31,15 @@ arg .rs 1   ; argument for subroutine
 
 STATE_TITLE = 0
 STATE_PLAYING = 1
+
+BUTTON_A = $80
+BUTTON_B = $40
+BUTTON_SELECT = $20
+BUTTON_START = $10
+BUTTON_UP = $08
+BUTTON_DOWN = $04
+BUTTON_LEFT = $02
+BUTTON_RIGHT = $01
 
 ;Declare some macros here
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -166,6 +180,13 @@ TitleAttrs:
     lda #STATE_TITLE
     sta game_state
 
+    lda #$20
+    sta player1_x
+    sta player1_y
+    lda #$80
+    sta player2_x
+    sta player2_y
+
     lda #%10010000  ; enable NMI
     sta $2000
     lda #%00011110  ; enable spr/BG
@@ -215,7 +236,7 @@ GameEngineDone:
 EngineTitle:
 
     lda buttons1
-    and #%00010000
+    and #BUTTON_START
     beq NotStart
     jsr LoadPlaying
 NotStart:
@@ -288,6 +309,25 @@ PlayingAttrs:
     sta $2000
     lda #%00011110  ; enable spr/BG
     sta $2001
+
+
+    lda player1_y
+    sta $0200
+    lda #$00
+    sta $0201
+    lda #$00
+    sta $0202
+    lda player1_x
+    sta $0203
+
+    lda player2_y
+    sta $0204
+    lda #$00
+    sta $0205
+    lda #$01
+    sta $0206
+    lda player2_x
+    sta $0207
 
 LoadPlayingDone:
 
