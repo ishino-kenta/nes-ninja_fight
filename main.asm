@@ -11,6 +11,8 @@
 
 buttons1    .rs 1
 buttons1pre .rs 1
+buttons2    .rs 1
+buttons2pre .rs 1
 
 game_state  .rs 1
 
@@ -40,6 +42,16 @@ BUTTON_UP = $08
 BUTTON_DOWN = $04
 BUTTON_LEFT = $02
 BUTTON_RIGHT = $01
+
+WALL_TOP = $18
+WALL_BOTTOM = $A8
+WALL_RIGHT = $F8
+WALL_LEFT = $08
+
+PLAYER1_WIDTH = $08
+PLAYER1_HEIGHT = $08
+PLAYER2_WIDTH = $08
+PLAYER2_HEIGHT = $08
 
 ;Declare some macros here
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -210,6 +222,7 @@ NMI:
     sta $2005
 
     jsr ReadController1
+    jsr ReadController2
 
     inc general_counter
 
@@ -350,6 +363,112 @@ EnginePlaying:
     sta $2005
     sta $2005
 
+Player1Right:
+    lda buttons1
+    and #BUTTON_RIGHT
+    beq Player1RightDone
+    inc player1_x
+    lda player1_x
+    cmp #WALL_RIGHT-PLAYER1_WIDTH
+    bcc Player1RightDone
+    lda #WALL_RIGHT-PLAYER1_WIDTH
+    sta player1_x
+Player1RightDone:
+Player1Left:
+    lda buttons1
+    and #BUTTON_LEFT
+    beq Player1LeftDone
+    dec player1_x
+    lda player1_x
+    cmp #WALL_LEFT
+    bcs Player1LeftDone
+    lda #WALL_LEFT
+    sta player1_x
+Player1LeftDone:
+Player1Up:
+    lda buttons1
+    and #BUTTON_UP
+    beq Player1UpDone
+    dec player1_y
+    lda player1_y
+    cmp #WALL_TOP
+    bcs Player1UpDone
+    lda #WALL_TOP
+    sta player1_y
+Player1UpDone:
+Player1Down:
+    lda buttons1
+    and #BUTTON_DOWN
+    beq Player1DownDone
+    inc player1_y
+    lda player1_y
+    cmp #WALL_BOTTOM-PLAYER1_HEIGHT
+    bcc Player1DownDone
+    lda #WALL_BOTTOM-PLAYER1_HEIGHT
+    sta player1_y
+Player1DownDone:
+
+Player1SpriteUpdate:
+    lda player1_y
+    sta $0200
+    lda player1_x
+    sta $0203
+Player1SpriteUpdateDone:
+
+
+Player2Right:
+    lda buttons2
+    and #BUTTON_RIGHT
+    beq Player2RightDone
+    inc player2_x
+    lda player2_x
+    cmp #WALL_RIGHT-PLAYER2_WIDTH
+    bcc Player2RightDone
+    lda #WALL_RIGHT-PLAYER2_WIDTH
+    sta player2_x
+Player2RightDone:
+Player2Left:
+    lda buttons2
+    and #BUTTON_LEFT
+    beq Player2LeftDone
+    dec player2_x
+    lda player2_x
+    cmp #WALL_LEFT
+    bcs Player2LeftDone
+    lda #WALL_LEFT
+    sta player2_x
+Player2LeftDone:
+Player2Up:
+    lda buttons2
+    and #BUTTON_UP
+    beq Player2UpDone
+    dec player2_y
+    lda player2_y
+    cmp #WALL_TOP
+    bcs Player2UpDone
+    lda #WALL_TOP
+    sta player2_y
+Player2UpDone:
+Player2Down:
+    lda buttons2
+    and #BUTTON_DOWN
+    beq Player2DownDone
+    inc player2_y
+    lda player2_y
+    cmp #WALL_BOTTOM-PLAYER2_HEIGHT
+    bcc Player2DownDone
+    lda #WALL_BOTTOM-PLAYER2_HEIGHT
+    sta player2_y
+Player2DownDone:
+
+
+Player2SpriteUpdate:
+    lda player2_y
+    sta $0204
+    lda player2_x
+    sta $0207
+Player2SpriteUpdateDone:
+
 
 
     rts
@@ -372,12 +491,30 @@ ReadController1:
     lda #$00
     sta $4016
     ldx #$08
-.ReadControllre1Loop:
+.ReadController1Loop:
     lda $4016
     lsr a
     rol buttons1
     dex
-    bne .ReadControllre1Loop
+    bne .ReadController1Loop
+
+    rts
+;;;;;
+
+ReadController2:
+    lda buttons2
+    sta buttons2pre
+    lda #$01
+    sta $4017
+    lda #$00
+    sta $4017
+    ldx #$08
+.ReadController2Loop:
+    lda $4017
+    lsr a
+    rol buttons2
+    dex
+    bne .ReadController2Loop
 
     rts
 
