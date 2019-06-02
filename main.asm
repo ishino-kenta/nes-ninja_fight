@@ -928,7 +928,7 @@ titleAttr:
     .incbin "title.atr"
 
 playingNametable:
-    .incbin "playing.nt"
+    .incbin "playing_beta.nt"
 playingAttr:
     .incbin "playing.atr"
 
