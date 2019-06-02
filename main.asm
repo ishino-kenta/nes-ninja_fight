@@ -24,6 +24,8 @@ player1_sword_x   .rs 1
 player1_sword_y   .rs 1
 player1_sword_spr   .rs 1
 player1_sword_state .rs 1
+player1_sword_hit   .rs 1
+player1_life    .rs 1
 
 player2_x   .rs 1
 player2_y   .rs 1
@@ -33,6 +35,8 @@ player2_sword_x   .rs 1
 player2_sword_y   .rs 1
 player2_sword_spr   .rs 1
 player2_sword_state .rs 1
+player2_sword_hit   .rs 1
+player2_life    .rs 1
 
 tmp .rs 1
 tmp_addr_low    .rs 1
@@ -46,6 +50,7 @@ arg .rs 1   ; argument for subroutine
 
 STATE_TITLE = 0
 STATE_PLAYING = 1
+STATE_OVER = 2
 
 BUTTON_A = $80
 BUTTON_B = $40
@@ -58,13 +63,17 @@ BUTTON_RIGHT = $01
 
 WALL_TOP = $17
 WALL_BOTTOM = $A7
-WALL_RIGHT = $F8
-WALL_LEFT = $08
+WALL_RIGHT = $F0
+WALL_LEFT = $10
 
 PLAYER1_WIDTH = $07
 PLAYER1_HEIGHT = $08
+PLAYER1_SWORD_WIDTH = $08
+PLAYER1_SWORD_HEIGHT = $08
 PLAYER2_WIDTH = $07
 PLAYER2_HEIGHT = $08
+PLAYER2_SWORD_WIDTH = $08
+PLAYER2_SWORD_HEIGHT = $08
 
 DIRECTION_RIGHT = 0
 DIRECTION_LEFT = 1
@@ -88,6 +97,13 @@ PLAYER2_SWORD_Y = $020C
 PLAYER2_SWORD_SPR = $020D
 PLAYER2_SWORD_ATTR = $020E
 PLAYER2_SWORD_X = $020F
+
+PLAYER1_LIFE_LOW = $22
+PLAYER1_LIFE_HIGH = $E8
+PLAYER2_LIFE_LOW = $22
+PLAYER2_LIFE_HIGH = $F8
+
+LIFE_INIT = $04
 
 
 ;Declare some macros here
@@ -282,8 +298,13 @@ GameTitle:
 GamePlaying:
     lda game_state
     cmp #STATE_PLAYING
-    bne GameEngineDone
+    bne GameOver
     jsr EnginePlaying
+GameOver:
+    lda game_state
+    cmp #STATE_OVER
+    bne GameEngineDone
+    jsr EngineOver
 
 GameEngineDone:
 
@@ -396,6 +417,10 @@ PlayingAttrs:
     sta PLAYER2_ATTR
     sta PLAYER2_SWORD_ATTR
 
+    lda #LIFE_INIT
+    sta player1_life
+    sta player2_life
+
 LoadPlayingDone:
 
     rts
@@ -403,6 +428,25 @@ LoadPlayingDone:
 ;Playing scene
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 EnginePlaying:
+
+Player1LifeDec:
+    lda #PLAYER1_LIFE_LOW
+    sta $2006
+    lda #PLAYER1_LIFE_HIGH
+    add player1_life
+    sta $2006
+    lda #$00
+    sta $2007
+Player1LifeDecDone:
+Player2LifeDec:
+    lda #PLAYER2_LIFE_LOW
+    sta $2006
+    lda #PLAYER2_LIFE_HIGH
+    add player2_life
+    sta $2006
+    lda #$00
+    sta $2007
+Player2LifeDecDone:
 
     lda #$00
     sta $2003
@@ -632,6 +676,84 @@ Player2StelthDec:
     dec player2_stelth
 Player2StelthDecDone:
 
+
+Player1SwordHit:
+    lda player1_stelth
+    beq .label1
+    lda player1_sword_x
+    add #PLAYER1_SWORD_WIDTH
+    sta tmp
+    lda player2_x
+    cmp tmp ; p2x < p1sx+p1sw
+    bcs .label1
+    lda player2_x
+    add #PLAYER2_WIDTH
+    sta tmp
+    lda player1_sword_x
+    cmp tmp   ; p1sx < p2x+p2w
+    bcs .label1
+    lda player1_sword_y
+    add #PLAYER1_SWORD_HEIGHT
+    sta tmp
+    lda player2_y
+    cmp tmp ; p2y < p1sy+p1sh
+    bcs .label1
+    lda player2_y
+    add #PLAYER2_HEIGHT
+    sta tmp
+    lda player1_sword_y
+    cmp tmp   ; p1sy < p2y+p2h
+    bcs .label1
+    lda player1_sword_hit
+    bne Player1SwordHitDone
+    lda #$01
+    sta player1_sword_hit
+    dec player2_life
+    jmp Player1SwordHitDone
+.label1:
+    lda #$00
+    sta player1_sword_hit
+Player1SwordHitDone:
+
+Player2SwordHit:
+    lda player2_stelth
+    beq .label1
+    lda player2_sword_x
+    add #PLAYER2_SWORD_WIDTH
+    sta tmp
+    lda player1_x
+    cmp tmp ; p1x < p2sx+p2sw
+    bcs .label1
+    lda player1_x
+    add #PLAYER1_WIDTH
+    sta tmp
+    lda player2_sword_x
+    cmp tmp   ; p1sx < p2x+p2w
+    bcs .label1
+    lda player2_sword_y
+    add #PLAYER2_SWORD_HEIGHT
+    sta tmp
+    lda player1_y
+    cmp tmp ; p1y < p2sy+p2sh
+    bcs .label1
+    lda player1_y
+    add #PLAYER1_HEIGHT
+    sta tmp
+    lda player2_sword_y
+    cmp tmp   ; p1sy < p2y+p2h
+    bcs .label1
+    lda player2_sword_hit
+    bne Player2SwordHitDone
+    lda #$01
+    sta player2_sword_hit
+    dec player1_life
+    jmp Player2SwordHitDone
+.label1:
+    lda #$00
+    sta player2_sword_hit
+Player2SwordHitDone:
+
+
 Player1SpriteUpdate:
     lda player1_y
     sta PLAYER1_Y
@@ -639,9 +761,15 @@ Player1SpriteUpdate:
     sta PLAYER1_SWORD_Y
     lda player1_stelth
     bne .label1
+
     lda #$0F
     sta PLAYER1_SPR
     sta PLAYER1_SWORD_SPR
+;    lda #$00
+;    sta PLAYER1_SPR
+;    lda #$20
+;    sta PLAYER1_SWORD_SPR
+
     jmp .label2
 .label1:
     lda player1_spr
@@ -662,9 +790,15 @@ Player2SpriteUpdate:
     sta PLAYER2_SWORD_Y
     lda player2_stelth
     bne .label1
+
     lda #$0F
     sta PLAYER2_SPR
     sta PLAYER2_SWORD_SPR
+;    lda #$00
+;    sta PLAYER2_SPR
+;    lda #$20
+;    sta PLAYER2_SWORD_SPR
+    
     jmp .label2
 .label1:
     lda player2_spr
@@ -679,8 +813,60 @@ Player2SpriteUpdate:
     sta PLAYER2_SWORD_X
 Player2SpriteUpdateDone:
 
+Player1Dead:
+    lda player1_life
+    bne Plater1DeadDone
+    lda #STATE_OVER
+    sta game_state
+Plater1DeadDone:
+Player2Dead:
+    lda player2_life
+    bne Plater2DeadDone
+    lda #STATE_OVER
+    sta game_state
+Plater2DeadDone:
 
     rts
+
+;Over scene
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+EngineOver:
+
+Player1LifeDecOver:
+    lda #PLAYER1_LIFE_LOW
+    sta $2006
+    lda #PLAYER1_LIFE_HIGH
+    add player1_life
+    sta $2006
+    lda #$00
+    sta $2007
+Player1LifeDecOverDone:
+Player2LifeDecOver:
+    lda #PLAYER2_LIFE_LOW
+    sta $2006
+    lda #PLAYER2_LIFE_HIGH
+    add player2_life
+    sta $2006
+    lda #$00
+    sta $2007
+Player2LifeDecOverDone:
+
+    lda #$00
+    sta $2003
+    lda #$02
+    sta $4014; sprite DMA
+
+    lda #%10010000  ; PPU clean up
+    sta $2000
+    lda #%00011110
+    sta $2001
+    lda #$00
+    sta $2005
+    sta $2005
+
+    rts
+
+
 
 ;IRQ
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -742,7 +928,7 @@ titleAttr:
     .incbin "title.atr"
 
 playingNametable:
-    .incbin "playing.nt"
+    .incbin "playing_beta.nt"
 playingAttr:
     .incbin "playing.atr"
 
