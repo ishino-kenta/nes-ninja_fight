@@ -524,35 +524,6 @@ Player1StelthDec:
     sta player1_sword_state
     dec player1_stelth
 Player1StelthDecDone:
-Player1SpriteUpdate:
-    lda player1_y
-    sta PLAYER1_Y
-    lda player1_sword_y
-    sta PLAYER1_SWORD_Y
-
-;    lda #$FF
-;    sta player1_stelth  ; for degub
-    
-    lda player1_stelth
-    bne .label1
-    lda #$0F
-    sta PLAYER1_SPR
-    sta PLAYER1_SWORD_SPR
-    jmp .label2
-.label1:
-    lda player1_spr
-    sta PLAYER1_SPR
-    lda player1_sword_spr
-    add player1_sword_state
-    sta PLAYER1_SWORD_SPR
-.label2:
-    lda player1_x
-    sta PLAYER1_X
-    lda player1_sword_x
-    sta PLAYER1_SWORD_X
-Player1SpriteUpdateDone:
-
-
 
     lda player2_stelth
     bne DummyLabel2
@@ -660,15 +631,35 @@ Player2StelthDec:
     sta player2_sword_state
     dec player2_stelth
 Player2StelthDecDone:
+
+Player1SpriteUpdate:
+    lda player1_y
+    sta PLAYER1_Y
+    lda player1_sword_y
+    sta PLAYER1_SWORD_Y
+    lda player1_stelth
+    bne .label1
+    lda #$0F
+    sta PLAYER1_SPR
+    sta PLAYER1_SWORD_SPR
+    jmp .label2
+.label1:
+    lda player1_spr
+    sta PLAYER1_SPR
+    lda player1_sword_spr
+    add player1_sword_state
+    sta PLAYER1_SWORD_SPR
+.label2:
+    lda player1_x
+    sta PLAYER1_X
+    lda player1_sword_x
+    sta PLAYER1_SWORD_X
+Player1SpriteUpdateDone:
 Player2SpriteUpdate:
     lda player2_y
     sta PLAYER2_Y
     lda player2_sword_y
     sta PLAYER2_SWORD_Y
-
-;    lda #$FF
-;    sta player2_stelth  ; for degub
-    
     lda player2_stelth
     bne .label1
     lda #$0F
