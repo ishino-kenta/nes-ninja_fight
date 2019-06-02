@@ -58,13 +58,17 @@ BUTTON_RIGHT = $01
 
 WALL_TOP = $17
 WALL_BOTTOM = $A7
-WALL_RIGHT = $F8
-WALL_LEFT = $08
+WALL_RIGHT = $F0
+WALL_LEFT = $10
 
 PLAYER1_WIDTH = $07
 PLAYER1_HEIGHT = $08
+PLAYER1_SWORD_WIDTH = $08
+PLAYER1_SWORD_HEIGHT = $08
 PLAYER2_WIDTH = $07
 PLAYER2_HEIGHT = $08
+PLAYER2_SWORD_WIDTH = $08
+PLAYER2_SWORD_HEIGHT = $08
 
 DIRECTION_RIGHT = 0
 DIRECTION_LEFT = 1
@@ -632,6 +636,37 @@ Player2StelthDec:
     dec player2_stelth
 Player2StelthDecDone:
 
+
+Player1Attack:
+    lda player1_sword_x
+    add #PLAYER1_SWORD_WIDTH
+    sta tmp
+    lda player2_x
+    cmp tmp ; p2x < p1sx+p1sw
+    bcs .label1
+    lda player2_x
+    add #PLAYER2_WIDTH
+    sta tmp
+    lda player1_sword_x
+    cmp tmp   ; p1sx < p2x+p2w
+    bcs .label1
+    lda player1_sword_y
+    add #PLAYER1_SWORD_HEIGHT
+    sta tmp
+    lda player2_y
+    cmp tmp ; p2y < p1sy+p1sh
+    bcs .label1
+    lda player2_y
+    add #PLAYER2_HEIGHT
+    sta tmp
+    lda player1_sword_y
+    cmp tmp   ; p1sy < p2y+p2h
+    bcs .label1
+    lda #$FF
+    sta general_counter
+.label1:
+Player1AttackDone:
+
 Player1SpriteUpdate:
     lda player1_y
     sta PLAYER1_Y
@@ -639,9 +674,15 @@ Player1SpriteUpdate:
     sta PLAYER1_SWORD_Y
     lda player1_stelth
     bne .label1
-    lda #$0F
+
+;    lda #$0F
+;    sta PLAYER1_SPR
+;    sta PLAYER1_SWORD_SPR
+    lda #$00
     sta PLAYER1_SPR
+    lda #$20
     sta PLAYER1_SWORD_SPR
+
     jmp .label2
 .label1:
     lda player1_spr
@@ -662,9 +703,15 @@ Player2SpriteUpdate:
     sta PLAYER2_SWORD_Y
     lda player2_stelth
     bne .label1
-    lda #$0F
+
+    ;lda #$0F
+    ;sta PLAYER2_SPR
+    ;sta PLAYER2_SWORD_SPR
+    lda #$00
     sta PLAYER2_SPR
+    lda #$20
     sta PLAYER2_SWORD_SPR
+    
     jmp .label2
 .label1:
     lda player2_spr
