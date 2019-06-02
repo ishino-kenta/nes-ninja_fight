@@ -23,6 +23,8 @@ player1_stelth  .rs 1
 player1_sword_x   .rs 1
 player1_sword_y   .rs 1
 player1_sword_spr   .rs 1
+player1_sword_state .rs 1
+
 player2_x   .rs 1
 player2_y   .rs 1
 player2_spr .rs 1
@@ -414,6 +416,8 @@ EnginePlaying:
     sta $2005
 
 
+    lda player1_stelth
+    bne DummyLabel
 Player1Right:
     lda buttons1
     and #BUTTON_RIGHT
@@ -447,14 +451,15 @@ Player1Left:
     sta player1_sword_x
     lda player1_y
     sta player1_sword_y
-    lda #$21
+    lda #$30
     sta player1_sword_spr
     lda player1_x
     cmp #WALL_LEFT
     bcs DummyLabel;Player1A
     lda #WALL_LEFT
     sta player1_x
-    jmp DummyLabel;Player1A
+DummyLabel: ; for avoid jumping limit
+    jmp Player1A
 Player1LeftDone:
 Player1Up:
     lda buttons1
@@ -468,14 +473,13 @@ Player1Up:
     lda player1_y
     sub #$08
     sta player1_sword_y
-    lda #$22
+    lda #$40
     sta player1_sword_spr
     lda player1_y
     cmp #WALL_TOP
     bcs Player1A
     lda #WALL_TOP
     sta player1_y
-DummyLabel: ; for avoid jumping limit
     jmp Player1A
 Player1UpDone:
 Player1Down:
@@ -490,7 +494,7 @@ Player1Down:
     lda player1_y
     add #$08
     sta player1_sword_y
-    lda #$23
+    lda #$50
     sta player1_sword_spr
     lda player1_y
     cmp #WALL_BOTTOM-PLAYER1_HEIGHT
@@ -505,12 +509,17 @@ Player1A:
     and buttons1
     and #BUTTON_A
     beq Player1ADone
-    lda #$20
+    lda #$0F
     sta player1_stelth
 Player1ADone:
 Player1StelthDec:
+    lda #$00
+    sta player1_sword_state
     lda player1_stelth
     beq Player1StelthDecDone
+    lda player1_stelth
+    lsr a
+    sta player1_sword_state
     dec player1_stelth
 Player1StelthDecDone:
 Player1SpriteUpdate:
@@ -519,8 +528,8 @@ Player1SpriteUpdate:
     lda player1_sword_y
     sta PLAYER1_SWORD_Y
 
-    lda #$FF
-    sta player1_stelth  ; for degub
+;    lda #$FF
+;    sta player1_stelth  ; for degub
     
     lda player1_stelth
     bne .label1
@@ -532,6 +541,7 @@ Player1SpriteUpdate:
     lda player1_spr
     sta PLAYER1_SPR
     lda player1_sword_spr
+    add player1_sword_state
     sta PLAYER1_SWORD_SPR
 .label2:
     lda player1_x
