@@ -29,6 +29,10 @@ player2_x   .rs 1
 player2_y   .rs 1
 player2_spr .rs 1
 player2_stelth  .rs 1
+player2_sword_x   .rs 1
+player2_sword_y   .rs 1
+player2_sword_spr   .rs 1
+player2_sword_state .rs 1
 
 tmp .rs 1
 tmp_addr_low    .rs 1
@@ -68,13 +72,22 @@ DIRECTION_DOWN = 2
 DIRECTION_UP = 3
 
 PLAYER1_Y = $0200
-PLAYER1_X = $0203
 PLAYER1_SPR = $0201
 PLAYER1_ATTR = $0202
+PLAYER1_X = $0203
 PLAYER1_SWORD_Y = $0208
-PLAYER1_SWORD_X = $020B
 PLAYER1_SWORD_SPR = $0209
 PLAYER1_SWORD_ATTR = $020A
+PLAYER1_SWORD_X = $020B
+
+PLAYER2_Y = $0204
+PLAYER2_SPR = $0205
+PLAYER2_ATTR = $0206
+PLAYER2_X = $0207
+PLAYER2_SWORD_Y = $020C
+PLAYER2_SWORD_SPR = $020D
+PLAYER2_SWORD_ATTR = $020E
+PLAYER2_SWORD_X = $020F
 
 
 ;Declare some macros here
@@ -355,26 +368,10 @@ PlayingAttrs:
     lda #%00011110  ; enable spr/BG
     sta $2001
 
-
-;    lda player1_y
-;    sta PLAYER1_Y
-;    sta $0208
-;    lda #$00
-;    sta PLAYER1_SPR
-;    lda #$20
-;    sta $0209
-;    lda #$00
-;    sta PLAYER1_ATTR
-;    sta $020A
-;    lda player1_x
-;    sta PLAYER1_X
-;    add #$08
-;    sta $020B
-
     lda #$20
     sta player1_y
     sta player1_x
-    sta  player1_sword_y
+    sta player1_sword_y
     add #$08
     sta player1_sword_x
     lda #$00
@@ -385,14 +382,19 @@ PlayingAttrs:
     sta PLAYER1_ATTR
     sta PLAYER1_SWORD_ATTR
 
-    lda player2_y
-    sta $0204
-    lda #$00
-    sta $0205
+    lda #$A0
+    sta player2_y
+    sta player2_x
+    sta player2_sword_y
+    sub #$08
+    sta player2_sword_x
     lda #$01
-    sta $0206
-    lda player2_x
-    sta $0207
+    sta player2_spr
+    lda #$30
+    sta player2_sword_spr
+    lda #$01
+    sta PLAYER2_ATTR
+    sta PLAYER2_SWORD_ATTR
 
 LoadPlayingDone:
 
@@ -552,6 +554,8 @@ Player1SpriteUpdateDone:
 
 
 
+    lda player2_stelth
+    bne DummyLabel2
 Player2Right:
     lda buttons2
     and #BUTTON_RIGHT
@@ -560,10 +564,18 @@ Player2Right:
     lda #DIRECTION_RIGHT
     sta player2_spr
     lda player2_x
+    add #$08
+    sta player2_sword_x
+    lda player2_y
+    sta player2_sword_y
+    lda #$20
+    sta player2_sword_spr
+    lda player2_x
     cmp #WALL_RIGHT-PLAYER2_WIDTH
-    bcc Player2RightDone
+    bcc DummyLabel2;Player2A
     lda #WALL_RIGHT-PLAYER2_WIDTH
     sta player2_x
+    jmp DummyLabel2;Player2A
 Player2RightDone:
 Player2Left:
     lda buttons2
@@ -573,10 +585,19 @@ Player2Left:
     lda #DIRECTION_LEFT
     sta player2_spr
     lda player2_x
+    sub #$08
+    sta player2_sword_x
+    lda player2_y
+    sta player2_sword_y
+    lda #$30
+    sta player2_sword_spr
+    lda player2_x
     cmp #WALL_LEFT
-    bcs Player2LeftDone
+    bcs DummyLabel2;Player2A
     lda #WALL_LEFT
     sta player2_x
+DummyLabel2: ; for avoid jumping limit
+    jmp Player2A
 Player2LeftDone:
 Player2Up:
     lda buttons2
@@ -585,11 +606,19 @@ Player2Up:
     dec player2_y
     lda #DIRECTION_UP
     sta player2_spr
+    lda player2_x
+    sta player2_sword_x
+    lda player2_y
+    sub #$08
+    sta player2_sword_y
+    lda #$40
+    sta player2_sword_spr
     lda player2_y
     cmp #WALL_TOP
-    bcs Player2UpDone
+    bcs Player2A
     lda #WALL_TOP
     sta player2_y
+    jmp Player2A
 Player2UpDone:
 Player2Down:
     lda buttons2
@@ -598,11 +627,19 @@ Player2Down:
     inc player2_y
     lda #DIRECTION_DOWN
     sta player2_spr
+    lda player2_x
+    sta player2_sword_x
+    lda player2_y
+    add #$08
+    sta player2_sword_y
+    lda #$50
+    sta player2_sword_spr
     lda player2_y
     cmp #WALL_BOTTOM-PLAYER2_HEIGHT
-    bcc Player2DownDone
+    bcc Player2A
     lda #WALL_BOTTOM-PLAYER2_HEIGHT
     sta player2_y
+    jmp Player2A
 Player2DownDone:
 Player2A:
     lda buttons2
@@ -610,29 +647,46 @@ Player2A:
     and buttons2
     and #BUTTON_A
     beq Player2ADone
-    lda #$20
+    lda #$0F
     sta player2_stelth
 Player2ADone:
 Player2StelthDec:
+    lda #$00
+    sta player2_sword_state
     lda player2_stelth
     beq Player2StelthDecDone
+    lda player2_stelth
+    lsr a
+    sta player2_sword_state
     dec player2_stelth
 Player2StelthDecDone:
 Player2SpriteUpdate:
     lda player2_y
-    sta $0204
+    sta PLAYER2_Y
+    lda player2_sword_y
+    sta PLAYER2_SWORD_Y
+
+;    lda #$FF
+;    sta player2_stelth  ; for degub
+    
     lda player2_stelth
     bne .label1
     lda #$0F
+    sta PLAYER2_SPR
+    sta PLAYER2_SWORD_SPR
     jmp .label2
 .label1:
     lda player2_spr
+    sta PLAYER2_SPR
+    lda player2_sword_spr
+    add player2_sword_state
+    sta PLAYER2_SWORD_SPR
 .label2:
-    sta $0205
     lda player2_x
-    sta $0207
+    sta PLAYER2_X
+    lda player2_sword_x
+    sta PLAYER2_SWORD_X
 Player2SpriteUpdateDone:
-
 
 
     rts
