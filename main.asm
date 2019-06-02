@@ -50,6 +50,7 @@ arg .rs 1   ; argument for subroutine
 
 STATE_TITLE = 0
 STATE_PLAYING = 1
+STATE_OVER = 2
 
 BUTTON_A = $80
 BUTTON_B = $40
@@ -96,6 +97,11 @@ PLAYER2_SWORD_Y = $020C
 PLAYER2_SWORD_SPR = $020D
 PLAYER2_SWORD_ATTR = $020E
 PLAYER2_SWORD_X = $020F
+
+PLAYER1_LIFE_LOW = $22
+PLAYER1_LIFE_HIGH = $E8
+PLAYER2_LIFE_LOW = $22
+PLAYER2_LIFE_HIGH = $F8
 
 LIFE_INIT = $04
 
@@ -292,8 +298,13 @@ GameTitle:
 GamePlaying:
     lda game_state
     cmp #STATE_PLAYING
-    bne GameEngineDone
+    bne GameOver
     jsr EnginePlaying
+GameOver:
+    lda game_state
+    cmp #STATE_OVER
+    bne GameEngineDone
+    jsr EngineOver
 
 GameEngineDone:
 
@@ -417,6 +428,25 @@ LoadPlayingDone:
 ;Playing scene
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 EnginePlaying:
+
+Player1LifeDec:
+    lda #PLAYER1_LIFE_LOW
+    sta $2006
+    lda #PLAYER1_LIFE_HIGH
+    add player1_life
+    sta $2006
+    lda #$00
+    sta $2007
+Player1LifeDecDone:
+Player2LifeDec:
+    lda #PLAYER2_LIFE_LOW
+    sta $2006
+    lda #PLAYER2_LIFE_HIGH
+    add player2_life
+    sta $2006
+    lda #$00
+    sta $2007
+Player2LifeDecDone:
 
     lda #$00
     sta $2003
@@ -731,14 +761,14 @@ Player1SpriteUpdate:
     sta PLAYER1_SWORD_Y
     lda player1_stelth
     bne .label1
-;
-;    lda #$0F
-;    sta PLAYER1_SPR
-;    sta PLAYER1_SWORD_SPR
-    lda #$00
+
+    lda #$0F
     sta PLAYER1_SPR
-    lda #$20
     sta PLAYER1_SWORD_SPR
+;    lda #$00
+;    sta PLAYER1_SPR
+;    lda #$20
+;    sta PLAYER1_SWORD_SPR
 
     jmp .label2
 .label1:
@@ -761,13 +791,13 @@ Player2SpriteUpdate:
     lda player2_stelth
     bne .label1
 
-    ;lda #$0F
-    ;sta PLAYER2_SPR
-    ;sta PLAYER2_SWORD_SPR
-    lda #$00
+    lda #$0F
     sta PLAYER2_SPR
-    lda #$20
     sta PLAYER2_SWORD_SPR
+;    lda #$00
+;    sta PLAYER2_SPR
+;    lda #$20
+;    sta PLAYER2_SWORD_SPR
     
     jmp .label2
 .label1:
@@ -786,17 +816,57 @@ Player2SpriteUpdateDone:
 Player1Dead:
     lda player1_life
     bne Plater1DeadDone
-    lda STATE_TITLE
+    lda #STATE_OVER
     sta game_state
 Plater1DeadDone:
 Player2Dead:
     lda player2_life
     bne Plater2DeadDone
-    lda STATE_TITLE
+    lda #STATE_OVER
     sta game_state
 Plater2DeadDone:
 
     rts
+
+;Over scene
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+EngineOver:
+
+Player1LifeDecOver:
+    lda #PLAYER1_LIFE_LOW
+    sta $2006
+    lda #PLAYER1_LIFE_HIGH
+    add player1_life
+    sta $2006
+    lda #$00
+    sta $2007
+Player1LifeDecOverDone:
+Player2LifeDecOver:
+    lda #PLAYER2_LIFE_LOW
+    sta $2006
+    lda #PLAYER2_LIFE_HIGH
+    add player2_life
+    sta $2006
+    lda #$00
+    sta $2007
+Player2LifeDecOverDone:
+
+    lda #$00
+    sta $2003
+    lda #$02
+    sta $4014; sprite DMA
+
+    lda #%10010000  ; PPU clean up
+    sta $2000
+    lda #%00011110
+    sta $2001
+    lda #$00
+    sta $2005
+    sta $2005
+
+    rts
+
+
 
 ;IRQ
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
