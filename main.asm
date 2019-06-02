@@ -20,6 +20,9 @@ player1_x   .rs 1
 player1_y   .rs 1
 player1_spr .rs 1
 player1_stelth  .rs 1
+player1_sword_x   .rs 1
+player1_sword_y   .rs 1
+player1_sword_spr   .rs 1
 player2_x   .rs 1
 player2_y   .rs 1
 player2_spr .rs 1
@@ -57,11 +60,31 @@ PLAYER1_HEIGHT = $08
 PLAYER2_WIDTH = $07
 PLAYER2_HEIGHT = $08
 
+DIRECTION_RIGHT = 0
+DIRECTION_LEFT = 1
+DIRECTION_DOWN = 2
+DIRECTION_UP = 3
+
+PLAYER1_Y = $0200
+PLAYER1_X = $0203
+PLAYER1_SPR = $0201
+PLAYER1_ATTR = $0202
+PLAYER1_SWORD_Y = $0208
+PLAYER1_SWORD_X = $020B
+PLAYER1_SWORD_SPR = $0209
+PLAYER1_SWORD_ATTR = $020A
+
+
 ;Declare some macros here
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 add .macro
     clc
     adc \1
+    .endm
+
+sub .macro
+    clc
+    sbc \1
     .endm
 
 ;Initial settings
@@ -203,6 +226,9 @@ TitleAttrs:
     sta player2_x
     sta player2_y
 
+    lda #$20
+    sta player1_sword_spr
+
     lda #%10010000  ; enable NMI
     sta $2000
     lda #%00011110  ; enable spr/BG
@@ -328,14 +354,34 @@ PlayingAttrs:
     sta $2001
 
 
-    lda player1_y
-    sta $0200
+;    lda player1_y
+;    sta PLAYER1_Y
+;    sta $0208
+;    lda #$00
+;    sta PLAYER1_SPR
+;    lda #$20
+;    sta $0209
+;    lda #$00
+;    sta PLAYER1_ATTR
+;    sta $020A
+;    lda player1_x
+;    sta PLAYER1_X
+;    add #$08
+;    sta $020B
+
+    lda #$20
+    sta player1_y
+    sta player1_x
+    sta  player1_sword_y
+    add #$08
+    sta player1_sword_x
     lda #$00
-    sta $0201
+    sta player1_spr
+    lda #$20
+    sta player1_sword_spr
     lda #$00
-    sta $0202
-    lda player1_x
-    sta $0203
+    sta PLAYER1_ATTR
+    sta PLAYER1_SWORD_ATTR
 
     lda player2_y
     sta $0204
@@ -373,52 +419,85 @@ Player1Right:
     and #BUTTON_RIGHT
     beq Player1RightDone
     inc player1_x
-    lda #$00
+    lda #DIRECTION_RIGHT
     sta player1_spr
     lda player1_x
+    add #$08
+    sta player1_sword_x
+    lda player1_y
+    sta player1_sword_y
+    lda #$20
+    sta player1_sword_spr
+    lda player1_x
     cmp #WALL_RIGHT-PLAYER1_WIDTH
-    bcc Player1RightDone
+    bcc DummyLabel;Player1A
     lda #WALL_RIGHT-PLAYER1_WIDTH
     sta player1_x
+    jmp DummyLabel;Player1A
 Player1RightDone:
 Player1Left:
     lda buttons1
     and #BUTTON_LEFT
     beq Player1LeftDone
     dec player1_x
-    lda #$01
+    lda #DIRECTION_LEFT
     sta player1_spr
     lda player1_x
+    sub #$08
+    sta player1_sword_x
+    lda player1_y
+    sta player1_sword_y
+    lda #$21
+    sta player1_sword_spr
+    lda player1_x
     cmp #WALL_LEFT
-    bcs Player1LeftDone
+    bcs DummyLabel;Player1A
     lda #WALL_LEFT
     sta player1_x
+    jmp DummyLabel;Player1A
 Player1LeftDone:
 Player1Up:
     lda buttons1
     and #BUTTON_UP
     beq Player1UpDone
     dec player1_y
-    lda #$03
+    lda #DIRECTION_UP
     sta player1_spr
+    lda player1_x
+    sta player1_sword_x
+    lda player1_y
+    sub #$08
+    sta player1_sword_y
+    lda #$22
+    sta player1_sword_spr
     lda player1_y
     cmp #WALL_TOP
-    bcs Player1UpDone
+    bcs Player1A
     lda #WALL_TOP
     sta player1_y
+DummyLabel: ; for avoid jumping limit
+    jmp Player1A
 Player1UpDone:
 Player1Down:
     lda buttons1
     and #BUTTON_DOWN
     beq Player1DownDone
     inc player1_y
-    lda #$02
+    lda #DIRECTION_DOWN
     sta player1_spr
+    lda player1_x
+    sta player1_sword_x
+    lda player1_y
+    add #$08
+    sta player1_sword_y
+    lda #$23
+    sta player1_sword_spr
     lda player1_y
     cmp #WALL_BOTTOM-PLAYER1_HEIGHT
-    bcc Player1DownDone
+    bcc Player1A
     lda #WALL_BOTTOM-PLAYER1_HEIGHT
     sta player1_y
+    jmp Player1A
 Player1DownDone:
 Player1A:
     lda buttons1
@@ -436,18 +515,31 @@ Player1StelthDec:
 Player1StelthDecDone:
 Player1SpriteUpdate:
     lda player1_y
-    sta $0200
+    sta PLAYER1_Y
+    lda player1_sword_y
+    sta PLAYER1_SWORD_Y
+
+    lda #$FF
+    sta player1_stelth  ; for degub
+    
     lda player1_stelth
     bne .label1
     lda #$0F
+    sta PLAYER1_SPR
+    sta PLAYER1_SWORD_SPR
     jmp .label2
 .label1:
     lda player1_spr
+    sta PLAYER1_SPR
+    lda player1_sword_spr
+    sta PLAYER1_SWORD_SPR
 .label2:
-    sta $0201
     lda player1_x
-    sta $0203
+    sta PLAYER1_X
+    lda player1_sword_x
+    sta PLAYER1_SWORD_X
 Player1SpriteUpdateDone:
+
 
 
 Player2Right:
@@ -455,7 +547,7 @@ Player2Right:
     and #BUTTON_RIGHT
     beq Player2RightDone
     inc player2_x
-    lda #$00
+    lda #DIRECTION_RIGHT
     sta player2_spr
     lda player2_x
     cmp #WALL_RIGHT-PLAYER2_WIDTH
@@ -468,7 +560,7 @@ Player2Left:
     and #BUTTON_LEFT
     beq Player2LeftDone
     dec player2_x
-    lda #$01
+    lda #DIRECTION_LEFT
     sta player2_spr
     lda player2_x
     cmp #WALL_LEFT
@@ -481,7 +573,7 @@ Player2Up:
     and #BUTTON_UP
     beq Player2UpDone
     dec player2_y
-    lda #$03
+    lda #DIRECTION_UP
     sta player2_spr
     lda player2_y
     cmp #WALL_TOP
@@ -494,7 +586,7 @@ Player2Down:
     and #BUTTON_DOWN
     beq Player2DownDone
     inc player2_y
-    lda #$02
+    lda #DIRECTION_DOWN
     sta player2_spr
     lda player2_y
     cmp #WALL_BOTTOM-PLAYER2_HEIGHT
