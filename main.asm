@@ -24,6 +24,8 @@ player1_sword_x   .rs 1
 player1_sword_y   .rs 1
 player1_sword_spr   .rs 1
 player1_sword_state .rs 1
+player1_sword_hit   .rs 1
+player1_life    .rs 1
 
 player2_x   .rs 1
 player2_y   .rs 1
@@ -33,6 +35,8 @@ player2_sword_x   .rs 1
 player2_sword_y   .rs 1
 player2_sword_spr   .rs 1
 player2_sword_state .rs 1
+player2_sword_hit   .rs 1
+player2_life    .rs 1
 
 tmp .rs 1
 tmp_addr_low    .rs 1
@@ -92,6 +96,8 @@ PLAYER2_SWORD_Y = $020C
 PLAYER2_SWORD_SPR = $020D
 PLAYER2_SWORD_ATTR = $020E
 PLAYER2_SWORD_X = $020F
+
+LIFE_INIT = $04
 
 
 ;Declare some macros here
@@ -400,6 +406,10 @@ PlayingAttrs:
     sta PLAYER2_ATTR
     sta PLAYER2_SWORD_ATTR
 
+    lda #LIFE_INIT
+    sta player1_life
+    sta player2_life
+
 LoadPlayingDone:
 
     rts
@@ -637,7 +647,9 @@ Player2StelthDec:
 Player2StelthDecDone:
 
 
-Player1Attack:
+Player1SwordHit:
+    lda player1_stelth
+    beq .label1
     lda player1_sword_x
     add #PLAYER1_SWORD_WIDTH
     sta tmp
@@ -662,10 +674,55 @@ Player1Attack:
     lda player1_sword_y
     cmp tmp   ; p1sy < p2y+p2h
     bcs .label1
-    lda #$FF
-    sta general_counter
+    lda player1_sword_hit
+    bne Player1SwordHitDone
+    lda #$01
+    sta player1_sword_hit
+    dec player2_life
+    jmp Player1SwordHitDone
 .label1:
-Player1AttackDone:
+    lda #$00
+    sta player1_sword_hit
+Player1SwordHitDone:
+
+Player2SwordHit:
+    lda player2_stelth
+    beq .label1
+    lda player2_sword_x
+    add #PLAYER2_SWORD_WIDTH
+    sta tmp
+    lda player1_x
+    cmp tmp ; p1x < p2sx+p2sw
+    bcs .label1
+    lda player1_x
+    add #PLAYER1_WIDTH
+    sta tmp
+    lda player2_sword_x
+    cmp tmp   ; p1sx < p2x+p2w
+    bcs .label1
+    lda player2_sword_y
+    add #PLAYER2_SWORD_HEIGHT
+    sta tmp
+    lda player1_y
+    cmp tmp ; p1y < p2sy+p2sh
+    bcs .label1
+    lda player1_y
+    add #PLAYER1_HEIGHT
+    sta tmp
+    lda player2_sword_y
+    cmp tmp   ; p1sy < p2y+p2h
+    bcs .label1
+    lda player2_sword_hit
+    bne Player2SwordHitDone
+    lda #$01
+    sta player2_sword_hit
+    dec player1_life
+    jmp Player2SwordHitDone
+.label1:
+    lda #$00
+    sta player2_sword_hit
+Player2SwordHitDone:
+
 
 Player1SpriteUpdate:
     lda player1_y
@@ -674,7 +731,7 @@ Player1SpriteUpdate:
     sta PLAYER1_SWORD_Y
     lda player1_stelth
     bne .label1
-
+;
 ;    lda #$0F
 ;    sta PLAYER1_SPR
 ;    sta PLAYER1_SWORD_SPR
@@ -726,6 +783,18 @@ Player2SpriteUpdate:
     sta PLAYER2_SWORD_X
 Player2SpriteUpdateDone:
 
+Player1Dead:
+    lda player1_life
+    bne Plater1DeadDone
+    lda STATE_TITLE
+    sta game_state
+Plater1DeadDone:
+Player2Dead:
+    lda player2_life
+    bne Plater2DeadDone
+    lda STATE_TITLE
+    sta game_state
+Plater2DeadDone:
 
     rts
 
