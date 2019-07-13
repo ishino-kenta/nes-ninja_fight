@@ -103,7 +103,7 @@ PLAYER1_LIFE_HIGH = $E8
 PLAYER2_LIFE_LOW = $22
 PLAYER2_LIFE_HIGH = $F8
 
-LIFE_INIT = $04
+LIFE_INIT = $01
 
 
 ;Declare some macros here
@@ -117,7 +117,6 @@ sub .macro
     clc
     sbc \1
     .endm
-
 ;Initial settings
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     .bank 0
@@ -200,6 +199,13 @@ TitleNametables:
 
     ldx #$00
 .TitleNametablesLoop1:
+    ldy #$00
+.TitleNametablesLoop2:
+    lda [tmp_addr_low], y
+    sta $2007
+    iny
+    cpy #$20
+    bne .TitleNametablesLoop2
 
     lda tmp_addr_low
     add #$20
@@ -208,13 +214,6 @@ TitleNametables:
     adc #$00
     sta tmp_addr_high
 
-    ldy #$00
-.TitleNametablesLoop2:
-    lda [tmp_addr_low], y
-    sta $2007
-    iny
-    cpy #$20
-    bne .TitleNametablesLoop2
     inx
     cpx #$1E
     bne .TitleNametablesLoop1
@@ -250,12 +249,6 @@ TitleAttrs:
     lda #STATE_TITLE
     sta game_state
 
-    lda #$20
-    sta player1_x
-    sta player1_y
-    lda #$80
-    sta player2_x
-    sta player2_y
 
     lda #$20
     sta player1_sword_spr
@@ -345,14 +338,6 @@ PlayingNametables:
 
     ldx #$00
 .PlayingNametablesLoop1:
-
-    lda tmp_addr_low
-    add #$20
-    sta tmp_addr_low
-    lda tmp_addr_high
-    adc #$00
-    sta tmp_addr_high
-
     ldy #$00
 .PlayingNametablesLoop2:
     lda [tmp_addr_low], y
@@ -360,9 +345,47 @@ PlayingNametables:
     iny
     cpy #$20
     bne .PlayingNametablesLoop2
+    
+    lda tmp_addr_low
+    add #$20
+    sta tmp_addr_low
+    lda tmp_addr_high
+    adc #$00
+    sta tmp_addr_high
+
     inx
     cpx #$1E
     bne .PlayingNametablesLoop1
+
+
+    lda $2002
+    lda #PLAYER1_LIFE_LOW
+    sta $2006
+    lda #PLAYER1_LIFE_HIGH
+    sta $2006
+    lda #$05
+    ldx #0
+.Player1LifeNametablesLoop:
+    sta $2007
+    inx
+    cpx #LIFE_INIT
+    bne .Player1LifeNametablesLoop
+
+    lda $2002
+    lda #PLAYER2_LIFE_LOW
+    sta $2006
+    lda #PLAYER2_LIFE_HIGH
+    sta $2006
+    lda #$05
+    ldx #0
+.Player2LifeNametablesLoop:
+    sta $2007
+    inx
+    cpx #LIFE_INIT
+    bne .Player2LifeNametablesLoop
+
+PlayingNametablesDone:
+
 
 PlayingAttrs:
     lda $2002
@@ -403,7 +426,7 @@ PlayingAttrs:
     sta PLAYER1_ATTR
     sta PLAYER1_SWORD_ATTR
 
-    lda #$A0
+    lda #$30
     sta player2_y
     sta player2_x
     sta player2_sword_y
@@ -816,15 +839,17 @@ Player2SpriteUpdateDone:
 Player1Dead:
     lda player1_life
     bne Plater1DeadDone
-    lda #STATE_OVER
-    sta game_state
+    jmp GameOverInit
 Plater1DeadDone:
 Player2Dead:
     lda player2_life
-    bne Plater2DeadDone
+    bne GameOverInitDone
+    jmp GameOverInit
+Plater2DeadDone:
+GameOverInit:
     lda #STATE_OVER
     sta game_state
-Plater2DeadDone:
+GameOverInitDone:
 
     rts
 
@@ -832,24 +857,78 @@ Plater2DeadDone:
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 EngineOver:
 
-Player1LifeDecOver:
-    lda #PLAYER1_LIFE_LOW
+;Player1LifeDecOver:
+;    lda #PLAYER1_LIFE_LOW
+;    sta $2006
+;    lda #PLAYER1_LIFE_HIGH
+;    add player1_life
+;    sta $2006
+;    lda #$00
+;    sta $2007
+;Player1LifeDecOverDone:
+;Player2LifeDecOver:
+;    lda #PLAYER2_LIFE_LOW
+;    sta $2006
+;    lda #PLAYER2_LIFE_HIGH
+;    add player2_life
+;    sta $2006
+;    lda #$00
+;    sta $2007
+;Player2LifeDecOverDone:
+
+    lda $2002
+    lda #$22
     sta $2006
-    lda #PLAYER1_LIFE_HIGH
-    add player1_life
+    lda #$A0
     sta $2006
-    lda #$00
+    lda #LOW(winerWindow)
+    sta tmp_addr_low
+    lda #HIGH(winerWindow)
+    sta tmp_addr_high
+    ldx #$00
+.Loop1:
+    lda tmp_addr_low
+    add #$20
+    sta tmp_addr_low
+    lda tmp_addr_high
+    adc #$00
+    sta tmp_addr_high
+    ldy #$00
+.Loop2:
+    lda [tmp_addr_low], y
     sta $2007
-Player1LifeDecOverDone:
-Player2LifeDecOver:
-    lda #PLAYER2_LIFE_LOW
+    iny
+    cpy #$20
+    bne .Loop2
+    inx
+    cpx #$01
+    bne .Loop1
+
+
+
+
+
+JudgeWiner:
+
+    lda player2_life
+    bne Player2Wine
+Player1Wine:
+    lda #$22
     sta $2006
-    lda #PLAYER2_LIFE_HIGH
-    add player2_life
+    lda #$33
     sta $2006
-    lda #$00
+    lda #$1A
     sta $2007
-Player2LifeDecOverDone:
+    jmp JudgeWinerDone
+Player2Wine:
+    lda #$22
+    sta $2006
+    lda #$33
+    sta $2006
+    lda #$1A
+    sta $2007
+JudgeWinerDone:
+
 
     lda #$00
     sta $2003
@@ -863,6 +942,42 @@ Player2LifeDecOverDone:
     lda #$00
     sta $2005
     sta $2005
+
+Player1StelthDecOver:
+    lda #$00
+    sta player1_sword_state
+    lda player1_stelth
+    beq Player1StelthDecOverDone
+    lda player1_stelth
+    lsr a
+    sta player1_sword_state
+    dec player1_stelth
+Player1StelthDecOverDone:
+Player2StelthDecOver:
+    lda #$00
+    sta player2_sword_state
+    lda player2_stelth
+    beq Player2StelthDecOverDone
+    lda player2_stelth
+    lsr a
+    sta player2_sword_state
+    dec player2_stelth
+Player2StelthDecOverDone:
+
+Player1SpriteUpdateOver:
+    lda player1_spr
+    sta PLAYER1_SPR
+    lda player1_sword_spr
+    add player1_sword_state
+    sta PLAYER1_SWORD_SPR
+Player1SpriteUpdateOverDone:
+Player2SpriteUpdateOver:
+    lda player2_spr
+    sta PLAYER2_SPR
+    lda player2_sword_spr
+    add player2_sword_state
+    sta PLAYER2_SWORD_SPR
+Player2SpriteUpdateOverDone:
 
     rts
 
@@ -923,14 +1038,18 @@ palette:
     .incbin "palette.pal"
 
 titleNametable:
-    .incbin "title.nt"
+    .incbin "title.tile"
 titleAttr:
-    .incbin "title.atr"
+    .incbin "title.attr"
 
 playingNametable:
-    .incbin "playing_beta.nt"
+    .incbin "playing_beta.tile"
 playingAttr:
-    .incbin "playing.atr"
+    .incbin "playing_beta.attr"
+
+    .org $CFFF
+winerWindow:
+    .incbin "winner_window.tile"
 
 ;Vectors
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
