@@ -103,7 +103,7 @@ PLAYER1_LIFE_HIGH = $E8
 PLAYER2_LIFE_LOW = $22
 PLAYER2_LIFE_HIGH = $F8
 
-LIFE_INIT = $01
+LIFE_INIT = $02
 
 
 ;Declare some macros here
@@ -911,8 +911,8 @@ EngineOver:
 JudgeWiner:
 
     lda player2_life
-    bne Player2Wine
-Player1Wine:
+    bne Player2Win
+Player1Win:
     lda #$22
     sta $2006
     lda #$33
@@ -920,14 +920,14 @@ Player1Wine:
     lda #$1A
     sta $2007
     jmp JudgeWinerDone
-Player2Wine:
+Player2Win:
     lda #$22
     sta $2006
     lda #$33
     sta $2006
     lda #$1A
     sta $2007
-JudgeWinerDone:
+JudgeWinrDone:
 
 
     lda #$00
