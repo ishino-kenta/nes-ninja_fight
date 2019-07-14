@@ -1080,11 +1080,15 @@ Player2SpriteUpdateOverDone:
 
     lda window_counter
     cmp #$A0
-    bne .label
+    bne NotRestart
     lda buttons1
-    beq .label
+    bne Restart
+    lda buttons2
+    bne Restart
+    jmp NotRestart
+Restart:
     jmp RESET
-.label:
+NotRestart:
 
     rts
 
