@@ -38,12 +38,15 @@ player2_sword_state .rs 1
 player2_sword_hit   .rs 1
 player2_life    .rs 1
 
+window_counter  .rs 1
+
 tmp .rs 1
-tmp_addr_low    .rs 1
-tmp_addr_high   .rs 1
+source_addr_low    .rs 1
+source_addr_high   .rs 1
+ppu_addr_low    .rs 1
+ppu_addr_high   .rs 1
 general_counter .rs 1
 arg .rs 1   ; argument for subroutine
-
 
 ;Declare some constants here
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -103,7 +106,7 @@ PLAYER1_LIFE_HIGH = $E8
 PLAYER2_LIFE_LOW = $22
 PLAYER2_LIFE_HIGH = $F8
 
-LIFE_INIT = $02
+LIFE_INIT = $04
 
 
 ;Declare some macros here
@@ -193,26 +196,26 @@ TitleNametables:
     sta $2006
 
     lda #LOW(titleNametable)
-    sta tmp_addr_low
+    sta source_addr_low
     lda #HIGH(titleNametable)
-    sta tmp_addr_high
+    sta source_addr_high
 
     ldx #$00
 .TitleNametablesLoop1:
     ldy #$00
 .TitleNametablesLoop2:
-    lda [tmp_addr_low], y
+    lda [source_addr_low], y
     sta $2007
     iny
     cpy #$20
     bne .TitleNametablesLoop2
 
-    lda tmp_addr_low
+    lda source_addr_low
     add #$20
-    sta tmp_addr_low
-    lda tmp_addr_high
+    sta source_addr_low
+    lda source_addr_high
     adc #$00
-    sta tmp_addr_high
+    sta source_addr_high
 
     inx
     cpx #$1E
@@ -226,16 +229,16 @@ TitleAttrs:
     sta $2006
 
     lda #LOW(titleAttr)
-    sta tmp_addr_low
+    sta source_addr_low
     lda #HIGH(titleAttr)
-    sta tmp_addr_high
+    sta source_addr_high
 
     ldy #$00
 .TitleAttrsLoop:
-    lda [tmp_addr_low], y
+    lda [source_addr_low], y
     sta $2007
     iny
-    cpy #$20
+    cpy #$40
     bne .TitleAttrsLoop
 
 
@@ -332,26 +335,26 @@ PlayingNametables:
     sta $2006
 
     lda #LOW(playingNametable)
-    sta tmp_addr_low
+    sta source_addr_low
     lda #HIGH(playingNametable)
-    sta tmp_addr_high
+    sta source_addr_high
 
     ldx #$00
 .PlayingNametablesLoop1:
     ldy #$00
 .PlayingNametablesLoop2:
-    lda [tmp_addr_low], y
+    lda [source_addr_low], y
     sta $2007
     iny
     cpy #$20
     bne .PlayingNametablesLoop2
     
-    lda tmp_addr_low
+    lda source_addr_low
     add #$20
-    sta tmp_addr_low
-    lda tmp_addr_high
+    sta source_addr_low
+    lda source_addr_high
     adc #$00
-    sta tmp_addr_high
+    sta source_addr_high
 
     inx
     cpx #$1E
@@ -395,13 +398,13 @@ PlayingAttrs:
     sta $2006
 
     lda #LOW(playingAttr)
-    sta tmp_addr_low
+    sta source_addr_low
     lda #HIGH(playingAttr)
-    sta tmp_addr_high
+    sta source_addr_high
 
     ldy #$00
 .PlayingAttrsLoop:
-    lda [tmp_addr_low], y
+    lda [source_addr_low], y
     sta $2007
     iny
     cpy #$40
@@ -849,6 +852,8 @@ Plater2DeadDone:
 GameOverInit:
     lda #STATE_OVER
     sta game_state
+    lda #0
+    sta window_counter
 GameOverInitDone:
 
     rts
@@ -876,58 +881,105 @@ EngineOver:
 ;    sta $2007
 ;Player2LifeDecOverDone:
 
-    lda $2002
+ShowWinnerWindow:
+    lda window_counter
+    cmp #$A0
+    beq ShowWinnerWindowTileDone
+ShowWinnerWindowTile:
+    lda #$C0
+    add window_counter
+    sta ppu_addr_low
     lda #$22
-    sta $2006
-    lda #$A0
-    sta $2006
+    adc #0
+    sta ppu_addr_high
+
     lda #LOW(winerWindow)
-    sta tmp_addr_low
+    add window_counter
+    sta source_addr_low
     lda #HIGH(winerWindow)
-    sta tmp_addr_high
-    ldx #$00
-.Loop1:
-    lda tmp_addr_low
-    add #$20
-    sta tmp_addr_low
-    lda tmp_addr_high
-    adc #$00
-    sta tmp_addr_high
-    ldy #$00
-.Loop2:
-    lda [tmp_addr_low], y
+    adc #0
+    sta source_addr_high
+
+    lda ppu_addr_high
+    sta $2006
+    lda ppu_addr_low
+    sta $2006
+    ldy #0
+.Loop:
+    lda [source_addr_low], y
     sta $2007
     iny
     cpy #$20
-    bne .Loop2
-    inx
-    cpx #$01
-    bne .Loop1
+    bne .Loop
+ShowWinnerWindowTileDone:
+    lda window_counter
+    cmp #$A0
+    beq ShowWinnerWindowAttrDone
+ShowWinnerWindowAttr:
+    lda window_counter
+    lsr a
+    lsr a
+    add #$E8
+    sta ppu_addr_low
+    lda #$23
+    adc #0
+    sta ppu_addr_high
+
+    lda player2_life
+    bne .Player2Win
+.Player1Win:
+    lda window_counter
+    lsr a
+    lsr a
+    add #LOW(winerWindowAttr1)
+    sta source_addr_low
+    lda #HIGH(winerWindowAttr1)
+    adc #0
+    sta source_addr_high
+    jmp .JudgeDone
+.Player2Win:
+    lda window_counter
+    lsr a
+    lsr a
+    add #LOW(winerWindowAttr2)
+    sta source_addr_low
+    lda #HIGH(winerWindowAttr2)
+    adc #0
+    sta source_addr_high
+.JudgeDone:
+
+    lda ppu_addr_high
+    sta $2006
+    lda ppu_addr_low
+    sta $2006
+    ldy #0
+.Loop:
+    lda [source_addr_low], y
+    sta $2007
+    iny
+    cpy #$08
+    bne .Loop
+ShowWinnerWindowAttrDone:
+    lda window_counter
+    add #$20
+    sta window_counter
 
 
-
-
-
-JudgeWiner:
-
+ShowWinner:
+    lda #$23
+    sta $2006
+    lda #$10
+    sta $2006
     lda player2_life
     bne Player2Win
 Player1Win:
-    lda #$22
-    sta $2006
-    lda #$33
-    sta $2006
     lda #$1A
     sta $2007
-    jmp JudgeWinerDone
+    jmp ShowWinnerDone
 Player2Win:
-    lda #$22
-    sta $2006
-    lda #$33
-    sta $2006
-    lda #$1A
+    lda #$1B
     sta $2007
-JudgeWinrDone:
+ShowWinnerDone:
 
 
     lda #$00
@@ -1050,6 +1102,10 @@ playingAttr:
     .org $CFFF
 winerWindow:
     .incbin "winner_window.tile"
+winerWindowAttr1:
+    .incbin "winner_window1.attr"
+winerWindowAttr2:
+    .incbin "winner_window2.attr"
 
 ;Vectors
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
