@@ -157,6 +157,10 @@ clearMemory:
     inx
     bne clearMemory
 
+initSprites:
+    lda #$02
+    sta $4014; sprite DMA
+
 initBank:
     ldx #0
 .initBankLoop:
@@ -923,25 +927,6 @@ GameOverInitDone:
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 EngineOver:
 
-;Player1LifeDecOver:
-;    lda #PLAYER1_LIFE_LOW
-;    sta $2006
-;    lda #PLAYER1_LIFE_HIGH
-;    add player1_life
-;    sta $2006
-;    lda #$00
-;    sta $2007
-;Player1LifeDecOverDone:
-;Player2LifeDecOver:
-;    lda #PLAYER2_LIFE_LOW
-;    sta $2006
-;    lda #PLAYER2_LIFE_HIGH
-;    add player2_life
-;    sta $2006
-;    lda #$00
-;    sta $2007
-;Player2LifeDecOverDone:
-
 ShowWinnerWindow:
     lda window_counter
     cmp #$A0
@@ -970,7 +955,7 @@ ShowWinnerWindowTile:
     lda [source_addr_low], y
     sta $2007
     iny
-    cpy #$20
+    cpy #$10
     bne .Loop
 ShowWinnerWindowTileDone:
     lda window_counter
@@ -1018,12 +1003,13 @@ ShowWinnerWindowAttr:
     lda [source_addr_low], y
     sta $2007
     iny
-    cpy #$08
+    cpy #$04
     bne .Loop
-ShowWinnerWindowAttrDone:
+
     lda window_counter
-    add #$20
+    add #$10
     sta window_counter
+ShowWinnerWindowAttrDone:
 
 
 ShowWinner:
@@ -1091,6 +1077,14 @@ Player2SpriteUpdateOver:
     add player2_sword_state
     sta PLAYER2_SWORD_SPR
 Player2SpriteUpdateOverDone:
+
+    lda window_counter
+    cmp #$A0
+    bne .label
+    lda buttons1
+    beq .label
+    jmp RESET
+.label:
 
     rts
 
@@ -1160,7 +1154,6 @@ playingNametable:
 playingAttr:
     .incbin "playing_beta.attr"
 
-    .org $CFFF
 winerWindow:
     .incbin "winner_window.tile"
 winerWindowAttr1:
