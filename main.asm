@@ -137,6 +137,7 @@ RESET:
     stx $4010   ; disable DMC IRQs(?)
     lda #$00
     sta $A000   ; nametable mirroring
+    sta $4015   ; sound register iniitialize
 
 vblankWait1:
     bit $2002
@@ -575,6 +576,7 @@ Player1Down:
     sta player1_y
     jmp Player1A
 Player1DownDone:
+
 Player1A:
     lda buttons1
     eor buttons1pre
@@ -583,7 +585,24 @@ Player1A:
     beq Player1ADone
     lda #$0F
     sta player1_stelth
+
+Player1Sound:
+    lda $4015   ; enable sound
+    ora #%00000001
+    sta $4015
+
+    lda #%10011111
+    sta $4000
+    lda #%10101100
+    sta $4001
+    lda #%00000100
+    sta $4002
+    lda #%11100100
+    sta $4003
+Player1SoundDone:
+
 Player1ADone:
+
 Player1StelthDec:
     lda #$00
     sta player1_sword_state
@@ -682,6 +701,7 @@ Player2Down:
     sta player2_y
     jmp Player2A
 Player2DownDone:
+
 Player2A:
     lda buttons2
     eor buttons2pre
@@ -690,7 +710,24 @@ Player2A:
     beq Player2ADone
     lda #$0F
     sta player2_stelth
+
+Player2Sound:
+    lda $4015   ; enable sound
+    ora #%00000010
+    sta $4015
+
+    lda #%10011111
+    sta $4004
+    lda #%10101100
+    sta $4005
+    lda #%00000100
+    sta $4006
+    lda #%11100001
+    sta $4007
+Player2SoundDone:
+
 Player2ADone:
+
 Player2StelthDec:
     lda #$00
     sta player2_sword_state
