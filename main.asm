@@ -586,7 +586,7 @@ Player1A:
     lda #$0F
     sta player1_stelth
 
-Player1Sound:
+.AttackSound:
     lda $4015   ; enable sound
     ora #%00000001
     sta $4015
@@ -599,7 +599,7 @@ Player1Sound:
     sta $4002
     lda #%11100100
     sta $4003
-Player1SoundDone:
+.AttackSoundDone:
 
 Player1ADone:
 
@@ -711,7 +711,7 @@ Player2A:
     lda #$0F
     sta player2_stelth
 
-Player2Sound:
+.AttackSound:
     lda $4015   ; enable sound
     ora #%00000010
     sta $4015
@@ -724,7 +724,7 @@ Player2Sound:
     sta $4006
     lda #%11100001
     sta $4007
-Player2SoundDone:
+.AttackSoundDone:
 
 Player2ADone:
 
@@ -772,6 +772,18 @@ Player1SwordHit:
     lda #$01
     sta player1_sword_hit
     dec player2_life
+
+.Player2Damage:
+    lda #%00001000
+    sta $4015
+    lda #%11000001
+    sta $400C
+    lda #%00001100
+    sta $400E
+    lda #%00010011
+    sta $400F
+.Player2DamageDone:
+
     jmp Player1SwordHitDone
 .label1:
     lda #$00
@@ -810,6 +822,18 @@ Player2SwordHit:
     lda #$01
     sta player2_sword_hit
     dec player1_life
+
+.Player1Damage:
+    lda #%00001000
+    sta $4015
+    lda #%11000001
+    sta $400C
+    lda #%00000100
+    sta $400E
+    lda #%00010011
+    sta $400F
+.Player1DamageDone:
+
     jmp Player2SwordHitDone
 .label1:
     lda #$00
