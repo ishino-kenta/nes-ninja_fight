@@ -137,6 +137,7 @@ RESET:
     stx $4010   ; disable DMC IRQs(?)
     lda #$00
     sta $A000   ; nametable mirroring
+    sta $4015   ; sound register iniitialize
 
 vblankWait1:
     bit $2002
@@ -155,6 +156,10 @@ clearMemory:
     sta $0200, x    ; init sprite DMA space $FE
     inx
     bne clearMemory
+
+initSprites:
+    lda #$02
+    sta $4014; sprite DMA
 
 initBank:
     ldx #0
@@ -575,6 +580,7 @@ Player1Down:
     sta player1_y
     jmp Player1A
 Player1DownDone:
+
 Player1A:
     lda buttons1
     eor buttons1pre
@@ -583,7 +589,24 @@ Player1A:
     beq Player1ADone
     lda #$0F
     sta player1_stelth
+
+.AttackSound:
+    lda $4015   ; enable sound
+    ora #%00000001
+    sta $4015
+
+    lda #%10011111
+    sta $4000
+    lda #%10101100
+    sta $4001
+    lda #%00000100
+    sta $4002
+    lda #%11100100
+    sta $4003
+.AttackSoundDone:
+
 Player1ADone:
+
 Player1StelthDec:
     lda #$00
     sta player1_sword_state
@@ -682,6 +705,7 @@ Player2Down:
     sta player2_y
     jmp Player2A
 Player2DownDone:
+
 Player2A:
     lda buttons2
     eor buttons2pre
@@ -690,7 +714,24 @@ Player2A:
     beq Player2ADone
     lda #$0F
     sta player2_stelth
+
+.AttackSound:
+    lda $4015   ; enable sound
+    ora #%00000010
+    sta $4015
+
+    lda #%10011111
+    sta $4004
+    lda #%10101100
+    sta $4005
+    lda #%00000100
+    sta $4006
+    lda #%11100001
+    sta $4007
+.AttackSoundDone:
+
 Player2ADone:
+
 Player2StelthDec:
     lda #$00
     sta player2_sword_state
@@ -735,6 +776,18 @@ Player1SwordHit:
     lda #$01
     sta player1_sword_hit
     dec player2_life
+
+.Player2Damage:
+    lda #%00001000
+    sta $4015
+    lda #%11000001
+    sta $400C
+    lda #%00001100
+    sta $400E
+    lda #%00010011
+    sta $400F
+.Player2DamageDone:
+
     jmp Player1SwordHitDone
 .label1:
     lda #$00
@@ -773,6 +826,18 @@ Player2SwordHit:
     lda #$01
     sta player2_sword_hit
     dec player1_life
+
+.Player1Damage:
+    lda #%00001000
+    sta $4015
+    lda #%11000001
+    sta $400C
+    lda #%00000100
+    sta $400E
+    lda #%00010011
+    sta $400F
+.Player1DamageDone:
+
     jmp Player2SwordHitDone
 .label1:
     lda #$00
@@ -862,25 +927,6 @@ GameOverInitDone:
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 EngineOver:
 
-;Player1LifeDecOver:
-;    lda #PLAYER1_LIFE_LOW
-;    sta $2006
-;    lda #PLAYER1_LIFE_HIGH
-;    add player1_life
-;    sta $2006
-;    lda #$00
-;    sta $2007
-;Player1LifeDecOverDone:
-;Player2LifeDecOver:
-;    lda #PLAYER2_LIFE_LOW
-;    sta $2006
-;    lda #PLAYER2_LIFE_HIGH
-;    add player2_life
-;    sta $2006
-;    lda #$00
-;    sta $2007
-;Player2LifeDecOverDone:
-
 ShowWinnerWindow:
     lda window_counter
     cmp #$A0
@@ -909,7 +955,7 @@ ShowWinnerWindowTile:
     lda [source_addr_low], y
     sta $2007
     iny
-    cpy #$20
+    cpy #$10
     bne .Loop
 ShowWinnerWindowTileDone:
     lda window_counter
@@ -957,12 +1003,13 @@ ShowWinnerWindowAttr:
     lda [source_addr_low], y
     sta $2007
     iny
-    cpy #$08
+    cpy #$04
     bne .Loop
-ShowWinnerWindowAttrDone:
+
     lda window_counter
-    add #$20
+    add #$10
     sta window_counter
+ShowWinnerWindowAttrDone:
 
 
 ShowWinner:
@@ -1030,6 +1077,18 @@ Player2SpriteUpdateOver:
     add player2_sword_state
     sta PLAYER2_SWORD_SPR
 Player2SpriteUpdateOverDone:
+
+    lda window_counter
+    cmp #$A0
+    bne NotRestart
+    lda buttons1
+    bne Restart
+    lda buttons2
+    bne Restart
+    jmp NotRestart
+Restart:
+    jmp RESET
+NotRestart:
 
     rts
 
@@ -1099,7 +1158,6 @@ playingNametable:
 playingAttr:
     .incbin "playing_beta.attr"
 
-    .org $CFFF
 winerWindow:
     .incbin "winner_window.tile"
 winerWindowAttr1:
