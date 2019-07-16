@@ -5,49 +5,6 @@
     .inesmap 4
     .inesmir 1  ; background mirroring
 
-;Declare variables 
-;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    .rsset $0000  ;;start variables at ram location 0
-
-buttons1    .rs 1
-buttons1pre .rs 1
-buttons2    .rs 1
-buttons2pre .rs 1
-
-game_state  .rs 1
-
-player1_x   .rs 1
-player1_y   .rs 1
-player1_spr .rs 1
-player1_stelth  .rs 1
-player1_sword_x   .rs 1
-player1_sword_y   .rs 1
-player1_sword_spr   .rs 1
-player1_sword_state .rs 1
-player1_sword_hit   .rs 1
-player1_life    .rs 1
-
-player2_x   .rs 1
-player2_y   .rs 1
-player2_spr .rs 1
-player2_stelth  .rs 1
-player2_sword_x   .rs 1
-player2_sword_y   .rs 1
-player2_sword_spr   .rs 1
-player2_sword_state .rs 1
-player2_sword_hit   .rs 1
-player2_life    .rs 1
-
-window_counter  .rs 1
-
-tmp .rs 1
-source_addr_low    .rs 1
-source_addr_high   .rs 1
-ppu_addr_low    .rs 1
-ppu_addr_high   .rs 1
-general_counter .rs 1
-arg .rs 1   ; argument for subroutine
-
 ;Declare some constants here
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -120,6 +77,50 @@ sub .macro
     clc
     sbc \1
     .endm
+
+;Declare variables 
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    .rsset $0000  ;;start variables at ram location 0
+
+buttons1    .rs 1
+buttons1pre .rs 1
+buttons2    .rs 1
+buttons2pre .rs 1
+
+game_state  .rs 1
+
+player1_x   .rs 1
+player1_y   .rs 1
+player1_spr .rs 1
+player1_stelth  .rs 1
+player1_sword_x   .rs 1
+player1_sword_y   .rs 1
+player1_sword_spr   .rs 1
+player1_sword_state .rs 1
+player1_sword_hit   .rs 1
+player1_life    .rs 1
+
+player2_x   .rs 1
+player2_y   .rs 1
+player2_spr .rs 1
+player2_stelth  .rs 1
+player2_sword_x   .rs 1
+player2_sword_y   .rs 1
+player2_sword_spr   .rs 1
+player2_sword_state .rs 1
+player2_sword_hit   .rs 1
+player2_life    .rs 1
+
+window_counter  .rs 1
+
+tmp .rs 1
+source_addr_low    .rs 1
+source_addr_high   .rs 1
+ppu_addr_low    .rs 1
+ppu_addr_high   .rs 1
+general_counter .rs 1
+arg .rs 1   ; argument for subroutine
+
 ;Initial settings
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     .bank 0
@@ -288,6 +289,8 @@ NMI:
 
     inc general_counter
 
+
+
 GameEngine:
 
 GameTitle:
@@ -317,9 +320,9 @@ EngineTitle:
 
     lda buttons1
     and #BUTTON_START
-    beq NotStart
+    beq .NotStart
     jsr LoadPlaying
-NotStart:
+.NotStart:
     rts
 
 
@@ -373,11 +376,11 @@ PlayingNametables:
     sta $2006
     lda #$05
     ldx #0
-.Player1LifeNametablesLoop:
+Player1LifeNametablesLoop:
     sta $2007
     inx
     cpx #LIFE_INIT
-    bne .Player1LifeNametablesLoop
+    bne Player1LifeNametablesLoop
 
     lda $2002
     lda #PLAYER2_LIFE_LOW
@@ -386,14 +389,11 @@ PlayingNametables:
     sta $2006
     lda #$05
     ldx #0
-.Player2LifeNametablesLoop:
+Player2LifeNametablesLoop:
     sta $2007
     inx
     cpx #LIFE_INIT
-    bne .Player2LifeNametablesLoop
-
-PlayingNametablesDone:
-
+    bne Player2LifeNametablesLoop
 
 PlayingAttrs:
     lda $2002
@@ -415,6 +415,7 @@ PlayingAttrs:
     cpy #$40
     bne .PlayingAttrsLoop
 
+LoadPlayingCont:
     lda #%10010000  ; enable NMI
     sta $2000
     lda #%00011110  ; enable spr/BG
@@ -451,9 +452,7 @@ PlayingAttrs:
     lda #LIFE_INIT
     sta player1_life
     sta player2_life
-
 LoadPlayingDone:
-
     rts
 
 ;Playing scene
@@ -468,7 +467,6 @@ Player1LifeDec:
     sta $2006
     lda #$00
     sta $2007
-Player1LifeDecDone:
 Player2LifeDec:
     lda #PLAYER2_LIFE_LOW
     sta $2006
@@ -477,7 +475,7 @@ Player2LifeDec:
     sta $2006
     lda #$00
     sta $2007
-Player2LifeDecDone:
+
 
     lda #$00
     sta $2003
@@ -493,104 +491,108 @@ Player2LifeDecDone:
     sta $2005
 
 
+Player1Controll:
+.Right:
     lda player1_stelth
-    bne DummyLabel
-Player1Right:
+    bne .Left
+
     lda buttons1
     and #BUTTON_RIGHT
-    beq Player1RightDone
+    beq .Left
+
     inc player1_x
+    
+    lda player1_x
+    cmp #WALL_RIGHT - PLAYER1_WIDTH
+    bcc .1
+    lda #WALL_RIGHT - PLAYER1_WIDTH
+    sta player1_x
+.1:
     lda #DIRECTION_RIGHT
     sta player1_spr
     lda player1_x
-    add #$08
+    add #$07
     sta player1_sword_x
     lda player1_y
     sta player1_sword_y
     lda #$20
     sta player1_sword_spr
-    lda player1_x
-    cmp #WALL_RIGHT-PLAYER1_WIDTH
-    bcc DummyLabel;Player1A
-    lda #WALL_RIGHT-PLAYER1_WIDTH
-    sta player1_x
-    jmp DummyLabel;Player1A
-Player1RightDone:
-Player1Left:
+.Left:
+    lda player1_stelth
+    bne .Up
     lda buttons1
     and #BUTTON_LEFT
-    beq Player1LeftDone
+    beq .Up
     dec player1_x
+    lda player1_x
+    cmp #WALL_LEFT
+    bcs .2
+    lda #WALL_LEFT
+    sta player1_x
+.2:
     lda #DIRECTION_LEFT
     sta player1_spr
     lda player1_x
-    sub #$08
+    sub #$07
     sta player1_sword_x
     lda player1_y
     sta player1_sword_y
     lda #$30
     sta player1_sword_spr
-    lda player1_x
-    cmp #WALL_LEFT
-    bcs DummyLabel;Player1A
-    lda #WALL_LEFT
-    sta player1_x
-DummyLabel: ; for avoid jumping limit
-    jmp Player1A
-Player1LeftDone:
-Player1Up:
+.Up:
+    lda player1_stelth
+    bne .Down
     lda buttons1
     and #BUTTON_UP
-    beq Player1UpDone
+    beq .Down
     dec player1_y
+    lda player1_y
+    cmp #WALL_TOP
+    bcs .3
+    lda #WALL_TOP
+    sta player1_y
+.3:
     lda #DIRECTION_UP
     sta player1_spr
     lda player1_x
     sta player1_sword_x
     lda player1_y
-    sub #$08
+    sub #$07
     sta player1_sword_y
     lda #$40
     sta player1_sword_spr
-    lda player1_y
-    cmp #WALL_TOP
-    bcs Player1A
-    lda #WALL_TOP
-    sta player1_y
-    jmp Player1A
-Player1UpDone:
-Player1Down:
+.Down:
+    lda player1_stelth
+    bne .A
     lda buttons1
     and #BUTTON_DOWN
-    beq Player1DownDone
+    beq .A
     inc player1_y
+    lda player1_y
+    cmp #WALL_BOTTOM-PLAYER1_HEIGHT
+    bcc .4
+    lda #WALL_BOTTOM-PLAYER1_HEIGHT
+    sta player1_y
+.4:
     lda #DIRECTION_DOWN
     sta player1_spr
     lda player1_x
     sta player1_sword_x
     lda player1_y
-    add #$08
+    add #$07
     sta player1_sword_y
     lda #$50
     sta player1_sword_spr
-    lda player1_y
-    cmp #WALL_BOTTOM-PLAYER1_HEIGHT
-    bcc Player1A
-    lda #WALL_BOTTOM-PLAYER1_HEIGHT
-    sta player1_y
-    jmp Player1A
-Player1DownDone:
-
-Player1A:
+.A:
     lda buttons1
     eor buttons1pre
     and buttons1
     and #BUTTON_A
-    beq Player1ADone
+    beq Player1ControllDone
     lda #$0F
     sta player1_stelth
 
-.AttackSound:
+.ASound:
     lda $4015   ; enable sound
     ora #%00000001
     sta $4015
@@ -603,10 +605,7 @@ Player1A:
     sta $4002
     lda #%11100100
     sta $4003
-.AttackSoundDone:
-
-Player1ADone:
-
+Player1ControllDone:
 Player1StelthDec:
     lda #$00
     sta player1_sword_state
@@ -618,104 +617,105 @@ Player1StelthDec:
     dec player1_stelth
 Player1StelthDecDone:
 
+Player2Controll:
+.Right:
     lda player2_stelth
-    bne DummyLabel2
-Player2Right:
+    bne .Left
     lda buttons2
     and #BUTTON_RIGHT
-    beq Player2RightDone
+    beq .Left
     inc player2_x
+    lda player2_x
+    cmp #WALL_RIGHT-PLAYER2_WIDTH
+    bcc .1
+    lda #WALL_RIGHT-PLAYER2_WIDTH
+    sta player2_x
+.1:
     lda #DIRECTION_RIGHT
     sta player2_spr
     lda player2_x
-    add #$08
+    add #$07
     sta player2_sword_x
     lda player2_y
     sta player2_sword_y
     lda #$20
     sta player2_sword_spr
-    lda player2_x
-    cmp #WALL_RIGHT-PLAYER2_WIDTH
-    bcc DummyLabel2;Player2A
-    lda #WALL_RIGHT-PLAYER2_WIDTH
-    sta player2_x
-    jmp DummyLabel2;Player2A
-Player2RightDone:
-Player2Left:
+.Left:
+    lda player2_stelth
+    bne .Up
     lda buttons2
     and #BUTTON_LEFT
-    beq Player2LeftDone
+    beq .Up
     dec player2_x
+    lda player2_x
+    cmp #WALL_LEFT
+    bcs .2
+    lda #WALL_LEFT
+    sta player2_x
+.2:
     lda #DIRECTION_LEFT
     sta player2_spr
     lda player2_x
-    sub #$08
+    sub #$07
     sta player2_sword_x
     lda player2_y
     sta player2_sword_y
     lda #$30
     sta player2_sword_spr
-    lda player2_x
-    cmp #WALL_LEFT
-    bcs DummyLabel2;Player2A
-    lda #WALL_LEFT
-    sta player2_x
-DummyLabel2: ; for avoid jumping limit
-    jmp Player2A
-Player2LeftDone:
-Player2Up:
+.Up:
+    lda player2_stelth
+    bne .Down
     lda buttons2
     and #BUTTON_UP
-    beq Player2UpDone
+    beq .Down
     dec player2_y
+    lda player2_y
+    cmp #WALL_TOP
+    bcs .3
+    lda #WALL_TOP
+    sta player2_y
+.3:
     lda #DIRECTION_UP
     sta player2_spr
     lda player2_x
     sta player2_sword_x
     lda player2_y
-    sub #$08
+    sub #$07
     sta player2_sword_y
     lda #$40
     sta player2_sword_spr
-    lda player2_y
-    cmp #WALL_TOP
-    bcs Player2A
-    lda #WALL_TOP
-    sta player2_y
-    jmp Player2A
-Player2UpDone:
-Player2Down:
+.Down:
+    lda player2_stelth
+    bne .A
     lda buttons2
     and #BUTTON_DOWN
-    beq Player2DownDone
+    beq .A
     inc player2_y
+    lda player2_y
+    cmp #WALL_BOTTOM-PLAYER2_HEIGHT
+    bcc .4
+    lda #WALL_BOTTOM-PLAYER2_HEIGHT
+    sta player2_y
+.4:
     lda #DIRECTION_DOWN
     sta player2_spr
     lda player2_x
     sta player2_sword_x
     lda player2_y
-    add #$08
+    add #$07
     sta player2_sword_y
     lda #$50
     sta player2_sword_spr
-    lda player2_y
-    cmp #WALL_BOTTOM-PLAYER2_HEIGHT
-    bcc Player2A
-    lda #WALL_BOTTOM-PLAYER2_HEIGHT
-    sta player2_y
-    jmp Player2A
-Player2DownDone:
-
-Player2A:
+.A:
     lda buttons2
     eor buttons2pre
     and buttons2
     and #BUTTON_A
-    beq Player2ADone
+    beq Player2ControllDone
     lda #$0F
     sta player2_stelth
 
-.AttackSound:
+.ASound:
     lda $4015   ; enable sound
     ora #%00000010
     sta $4015
@@ -728,10 +728,8 @@ Player2A:
     sta $4006
     lda #%11100001
     sta $4007
-.AttackSoundDone:
 
-Player2ADone:
-
+Player2ControllDone:
 Player2StelthDec:
     lda #$00
     sta player2_sword_state
