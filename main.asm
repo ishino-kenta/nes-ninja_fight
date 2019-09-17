@@ -68,24 +68,20 @@ LIFE_INIT = $03
 
 ;Declare some macros here
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-add .macro
-    clc
-    adc \1
-    .endm
 
-sub .macro
-    clc
-    sbc \1
-    .endm
 
 ;Declare variables 
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     .rsset $0000  ;;start variables at ram location 0
+test    .rs 1
+test2   .rs 1
+test3   .rs 1
+test4   .rs 1
 
-buttons1    .rs 1
-buttons1pre .rs 1
-buttons2    .rs 1
-buttons2pre .rs 1
+conroller1    .rs 1
+conroller1pre .rs 1
+conroller2    .rs 1
+conroller2pre .rs 1
 
 game_state  .rs 1
 
@@ -99,6 +95,16 @@ player1_sword_spr   .rs 1
 player1_sword_state .rs 1
 player1_sword_hit   .rs 1
 player1_life    .rs 1
+player1_hit_right_top    .rs 1
+player1_hit_right_bottom   .rs 1
+player1_hit_left_top    .rs 1
+player1_hit_left_bottom   .rs 1
+player1_hit_top_right   .rs 1
+player1_hit_top_left   .rs 1
+player1_hit_bottom_right   .rs 1
+player1_hit_bottom_left   .rs 1
+
+
 
 player2_x   .rs 1
 player2_y   .rs 1
@@ -114,6 +120,7 @@ player2_life    .rs 1
 window_counter  .rs 1
 
 tmp .rs 1
+tmp2    .rs 1
 source_addr_low    .rs 1
 source_addr_high   .rs 1
 ppu_addr_low    .rs 1
@@ -124,7 +131,196 @@ arg .rs 1   ; argument for subroutine
 ;Initial settings
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     .bank 0
-    .org $C000 
+    .org $C000
+main:
+
+vWait1:
+    bit $2002
+    bpl vWait1
+
+loadPalettes:
+    lda $2002   ; reset high/low latch
+    lda #$3F
+    sta $2006
+    lda #$00
+    sta $2006
+    ldx #$00
+.loop:
+    lda palette, x
+    sta $2007
+    inx
+    cpx #$20
+    bne .loop
+
+vWait2:
+    bit $2002
+    bpl vWait2
+
+titleNametables:
+    lda $2002
+    lda #$20
+    sta $2006
+    lda #$00
+    sta $2006
+
+    lda #LOW(titleNametable)
+    sta source_addr_low
+    lda #HIGH(titleNametable)
+    sta source_addr_high
+
+    ldx #$00
+.loop:
+    ldy #$00
+.loop2:
+    lda [source_addr_low], y
+    sta $2007
+    iny
+    cpy #$20
+    bne .loop2
+
+    lda source_addr_low
+    clc
+	adc #$20
+    sta source_addr_low
+    lda source_addr_high
+    adc #$00
+    sta source_addr_high
+
+    inx
+    cpx #$1E
+    bne .loop
+
+titleAttrs:
+    lda $2002
+    lda #$23
+    sta $2006
+    lda #$C0
+    sta $2006
+
+    lda #LOW(titleAttr)
+    sta source_addr_low
+    lda #HIGH(titleAttr)
+    sta source_addr_high
+
+    ldy #$00
+.loop:
+    lda [source_addr_low], y
+    sta $2007
+    iny
+    cpy #$40
+    bne .loop
+
+
+;Variable initialize
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+    lda #$FF
+    sta conroller1
+    sta conroller1pre
+
+    lda #STATE_TITLE
+    sta game_state
+
+
+    lda #$20
+    sta player1_sword_spr
+
+    lda #%10010000  ; enable NMI
+    sta $2000
+    lda #%00011110  ; enable spr/BG
+    sta $2001
+
+    cli ; enable IRQ
+
+forever:
+    jmp forever
+
+;Main Loop
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+NMI:
+
+    lda #%10010000  ; PPU clean up
+    sta $2000
+    lda #%00011110
+    sta $2001
+    lda #$00
+    sta $2005
+    sta $2005
+
+    jsr readController1
+    jsr readController2
+
+    inc general_counter
+
+gameEngine:
+.title:
+    lda game_state
+    cmp #STATE_TITLE
+    bne .playing
+    jsr engineTitle
+    jmp .done
+.playing:
+    lda game_state
+    cmp #STATE_PLAYING
+    bne .over
+    jsr enginePlaying
+.over:
+    lda game_state
+    cmp #STATE_OVER
+    bne .done
+    jsr engineOver
+.done:
+
+    rti
+
+;Title scene
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    .include "engineTitle.asm"
+
+;Playing scene
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    .include "enginePlaying.asm"
+
+;Over scene
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    .include "engineOver.asm"
+
+;IRQ
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+IRQ:
+
+    rti
+
+
+    .include "subroutine.asm"
+
+;Some datas
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+palette:
+    .incbin "palette.pal"
+
+titleNametable:
+    .incbin "title.tile"
+titleAttr:
+    .incbin "title.attr"
+
+playingNametable:
+    .incbin "playing_beta.tile"
+playingAttr:
+    .incbin "playing_beta.attr"
+
+winerWindow:
+    .incbin "winner_window.tile"
+winerWindowAttr1:
+    .incbin "winner_window1.attr"
+winerWindowAttr2:
+    .incbin "winner_window2.attr"
+
+;Vectors
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    .bank 1
+    .org $E000
 RESET:
     sei         ; disanle IRQs
     cld         ; disable decimal mode
@@ -172,1003 +368,11 @@ initBank:
     cpx #8
     bne .initBankLoop
 
-vblankWait2:
-    bit $2002
-    bpl vblankWait2
-
-LoadPalettes:
-    lda $2002   ; reset high/low latch
-    lda #$3F
-    sta $2006
-    lda #$00
-    sta $2006
-    ldx #$00
-.LoadPalettesLoop:
-    lda palette, x
-    sta $2007
-    inx
-    cpx #$20
-    bne .LoadPalettesLoop
-
-vblankWait3:
-    bit $2002
-    bpl vblankWait3
-
-TitleNametables:
-    lda $2002
-    lda #$20
-    sta $2006
-    lda #$00
-    sta $2006
-
-    lda #LOW(titleNametable)
-    sta source_addr_low
-    lda #HIGH(titleNametable)
-    sta source_addr_high
-
-    ldx #$00
-.TitleNametablesLoop1:
-    ldy #$00
-.TitleNametablesLoop2:
-    lda [source_addr_low], y
-    sta $2007
-    iny
-    cpy #$20
-    bne .TitleNametablesLoop2
-
-    lda source_addr_low
-    add #$20
-    sta source_addr_low
-    lda source_addr_high
-    adc #$00
-    sta source_addr_high
-
-    inx
-    cpx #$1E
-    bne .TitleNametablesLoop1
-
-TitleAttrs:
-    lda $2002
-    lda #$23
-    sta $2006
-    lda #$C0
-    sta $2006
-
-    lda #LOW(titleAttr)
-    sta source_addr_low
-    lda #HIGH(titleAttr)
-    sta source_addr_high
-
-    ldy #$00
-.TitleAttrsLoop:
-    lda [source_addr_low], y
-    sta $2007
-    iny
-    cpy #$40
-    bne .TitleAttrsLoop
-
-
-;Variable initialize
-;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-    lda #$FF
-    sta buttons1
-    sta buttons1pre
-
-    lda #STATE_TITLE
-    sta game_state
-
-
-    lda #$20
-    sta player1_sword_spr
-
-    lda #%10010000  ; enable NMI
-    sta $2000
-    lda #%00011110  ; enable spr/BG
-    sta $2001
-
-    cli ; enable IRQ
-
-Forever:
-    jmp Forever
-
-;Main Loop
-;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-NMI:
-
-    lda #%10010000  ; PPU clean up
-    sta $2000
-    lda #%00011110
-    sta $2001
-    lda #$00
-    sta $2005
-    sta $2005
-
-    jsr ReadController1
-    jsr ReadController2
-
-    inc general_counter
-
-
-
-GameEngine:
-
-GameTitle:
-    lda game_state
-    cmp #STATE_TITLE
-    bne GamePlaying
-    jsr EngineTitle
-    jmp GameEngineDone
-GamePlaying:
-    lda game_state
-    cmp #STATE_PLAYING
-    bne GameOver
-    jsr EnginePlaying
-GameOver:
-    lda game_state
-    cmp #STATE_OVER
-    bne GameEngineDone
-    jsr EngineOver
-
-GameEngineDone:
-
-    rti
-
-;Title scene
-;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-EngineTitle:
-
-    lda buttons1
-    eor buttons1pre
-    and buttons1
-    cmp #BUTTON_START
-    bne .NotStart
-    jsr LoadPlaying
-.NotStart:
-    rts
-
-
-LoadPlaying:
-    lda #STATE_PLAYING
-    sta game_state
-
-    lda #%00000000  ; disable NMI
-    sta $2000
-    lda #%00000000  ; disable spr/BG
-    sta $2001
-
-PlayingNametables:
-    lda $2002
-    lda #$20
-    sta $2006
-    lda #$00
-    sta $2006
-
-    lda #LOW(playingNametable)
-    sta source_addr_low
-    lda #HIGH(playingNametable)
-    sta source_addr_high
-
-    ldx #$00
-.PlayingNametablesLoop1:
-    ldy #$00
-.PlayingNametablesLoop2:
-    lda [source_addr_low], y
-    sta $2007
-    iny
-    cpy #$20
-    bne .PlayingNametablesLoop2
-    
-    lda source_addr_low
-    add #$20
-    sta source_addr_low
-    lda source_addr_high
-    adc #$00
-    sta source_addr_high
-
-    inx
-    cpx #$1E
-    bne .PlayingNametablesLoop1
-
-
-    lda $2002
-    lda #PLAYER1_LIFE_LOW
-    sta $2006
-    lda #PLAYER1_LIFE_HIGH
-    sta $2006
-    lda #$05
-    ldx #0
-Player1LifeNametablesLoop:
-    sta $2007
-    inx
-    cpx #LIFE_INIT
-    bne Player1LifeNametablesLoop
-
-    lda $2002
-    lda #PLAYER2_LIFE_LOW
-    sta $2006
-    lda #PLAYER2_LIFE_HIGH
-    sta $2006
-    lda #$05
-    ldx #0
-Player2LifeNametablesLoop:
-    sta $2007
-    inx
-    cpx #LIFE_INIT
-    bne Player2LifeNametablesLoop
-
-PlayingAttrs:
-    lda $2002
-    lda #$23
-    sta $2006
-    lda #$C0
-    sta $2006
-
-    lda #LOW(playingAttr)
-    sta source_addr_low
-    lda #HIGH(playingAttr)
-    sta source_addr_high
-
-    ldy #$00
-.PlayingAttrsLoop:
-    lda [source_addr_low], y
-    sta $2007
-    iny
-    cpy #$40
-    bne .PlayingAttrsLoop
-
-LoadPlayingCont:
-    lda #%10010000  ; enable NMI
-    sta $2000
-    lda #%00011110  ; enable spr/BG
-    sta $2001
-
-    lda #$20
-    sta player1_y
-    sta player1_x
-    sta player1_sword_y
-    add #$08
-    sta player1_sword_x
-    lda #$00
-    sta player1_spr
-    lda #$20
-    sta player1_sword_spr
-    lda #$00
-    sta PLAYER1_ATTR
-    sta PLAYER1_SWORD_ATTR
-
-    lda #$30
-    sta player2_y
-    sta player2_x
-    sta player2_sword_y
-    sub #$08
-    sta player2_sword_x
-    lda #$01
-    sta player2_spr
-    lda #$30
-    sta player2_sword_spr
-    lda #$01
-    sta PLAYER2_ATTR
-    sta PLAYER2_SWORD_ATTR
-
-    lda #LIFE_INIT
-    sta player1_life
-    sta player2_life
-LoadPlayingDone:
-    rts
-
-;Playing scene
-;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-EnginePlaying:
-
-Player1LifeDec:
-    lda #PLAYER1_LIFE_LOW
-    sta $2006
-    lda #PLAYER1_LIFE_HIGH
-    add player1_life
-    sta $2006
-    lda #$00
-    sta $2007
-Player2LifeDec:
-    lda #PLAYER2_LIFE_LOW
-    sta $2006
-    lda #PLAYER2_LIFE_HIGH
-    add player2_life
-    sta $2006
-    lda #$00
-    sta $2007
-
-
-    lda #$00
-    sta $2003
-    lda #$02
-    sta $4014; sprite DMA
-
-    lda #%10010000  ; PPU clean up
-    sta $2000
-    lda #%00011110
-    sta $2001
-    lda #$00
-    sta $2005
-    sta $2005
-
-
-Player1Controll:
-.Right:
-    lda player1_stelth
-    bne .Left
-
-    lda buttons1
-    and #BUTTON_RIGHT
-    beq .Left
-
-    inc player1_x
-    
-    lda player1_x
-    cmp #WALL_RIGHT - PLAYER1_WIDTH
-    bcc .1
-    lda #WALL_RIGHT - PLAYER1_WIDTH
-    sta player1_x
-.1:
-    lda #DIRECTION_RIGHT
-    sta player1_spr
-    lda player1_x
-    add #$07
-    sta player1_sword_x
-    lda player1_y
-    sta player1_sword_y
-    lda #$20
-    sta player1_sword_spr
-.Left:
-    lda player1_stelth
-    bne .Up
-    lda buttons1
-    and #BUTTON_LEFT
-    beq .Up
-    dec player1_x
-    lda player1_x
-    cmp #WALL_LEFT
-    bcs .2
-    lda #WALL_LEFT
-    sta player1_x
-.2:
-    lda #DIRECTION_LEFT
-    sta player1_spr
-    lda player1_x
-    sub #$07
-    sta player1_sword_x
-    lda player1_y
-    sta player1_sword_y
-    lda #$30
-    sta player1_sword_spr
-.Up:
-    lda player1_stelth
-    bne .Down
-    lda buttons1
-    and #BUTTON_UP
-    beq .Down
-    dec player1_y
-    lda player1_y
-    cmp #WALL_TOP
-    bcs .3
-    lda #WALL_TOP
-    sta player1_y
-.3:
-    lda #DIRECTION_UP
-    sta player1_spr
-    lda player1_x
-    sta player1_sword_x
-    lda player1_y
-    sub #$07
-    sta player1_sword_y
-    lda #$40
-    sta player1_sword_spr
-.Down:
-    lda player1_stelth
-    bne .A
-    lda buttons1
-    and #BUTTON_DOWN
-    beq .A
-    inc player1_y
-    lda player1_y
-    cmp #WALL_BOTTOM-PLAYER1_HEIGHT
-    bcc .4
-    lda #WALL_BOTTOM-PLAYER1_HEIGHT
-    sta player1_y
-.4:
-    lda #DIRECTION_DOWN
-    sta player1_spr
-    lda player1_x
-    sta player1_sword_x
-    lda player1_y
-    add #$07
-    sta player1_sword_y
-    lda #$50
-    sta player1_sword_spr
-.A:
-    lda buttons1
-    eor buttons1pre
-    and buttons1
-    and #BUTTON_A
-    beq Player1ControllDone
-    lda #$0F
-    sta player1_stelth
-
-.ASound:
-    lda $4015   ; enable sound
-    ora #%00000001
-    sta $4015
-
-    lda #%10011111
-    sta $4000
-    lda #%10101100
-    sta $4001
-    lda #%00000100
-    sta $4002
-    lda #%11100100
-    sta $4003
-Player1ControllDone:
-Player1StelthDec:
-    lda #$00
-    sta player1_sword_state
-    lda player1_stelth
-    beq Player1StelthDecDone
-    lda player1_stelth
-    lsr a
-    sta player1_sword_state
-    dec player1_stelth
-Player1StelthDecDone:
-
-Player2Controll:
-.Right:
-    lda player2_stelth
-    bne .Left
-    lda buttons2
-    and #BUTTON_RIGHT
-    beq .Left
-    inc player2_x
-    lda player2_x
-    cmp #WALL_RIGHT-PLAYER2_WIDTH
-    bcc .1
-    lda #WALL_RIGHT-PLAYER2_WIDTH
-    sta player2_x
-.1:
-    lda #DIRECTION_RIGHT
-    sta player2_spr
-    lda player2_x
-    add #$07
-    sta player2_sword_x
-    lda player2_y
-    sta player2_sword_y
-    lda #$20
-    sta player2_sword_spr
-.Left:
-    lda player2_stelth
-    bne .Up
-    lda buttons2
-    and #BUTTON_LEFT
-    beq .Up
-    dec player2_x
-    lda player2_x
-    cmp #WALL_LEFT
-    bcs .2
-    lda #WALL_LEFT
-    sta player2_x
-.2:
-    lda #DIRECTION_LEFT
-    sta player2_spr
-    lda player2_x
-    sub #$07
-    sta player2_sword_x
-    lda player2_y
-    sta player2_sword_y
-    lda #$30
-    sta player2_sword_spr
-.Up:
-    lda player2_stelth
-    bne .Down
-    lda buttons2
-    and #BUTTON_UP
-    beq .Down
-    dec player2_y
-    lda player2_y
-    cmp #WALL_TOP
-    bcs .3
-    lda #WALL_TOP
-    sta player2_y
-.3:
-    lda #DIRECTION_UP
-    sta player2_spr
-    lda player2_x
-    sta player2_sword_x
-    lda player2_y
-    sub #$07
-    sta player2_sword_y
-    lda #$40
-    sta player2_sword_spr
-.Down:
-    lda player2_stelth
-    bne .A
-    lda buttons2
-    and #BUTTON_DOWN
-    beq .A
-    inc player2_y
-    lda player2_y
-    cmp #WALL_BOTTOM-PLAYER2_HEIGHT
-    bcc .4
-    lda #WALL_BOTTOM-PLAYER2_HEIGHT
-    sta player2_y
-.4:
-    lda #DIRECTION_DOWN
-    sta player2_spr
-    lda player2_x
-    sta player2_sword_x
-    lda player2_y
-    add #$07
-    sta player2_sword_y
-    lda #$50
-    sta player2_sword_spr
-.A:
-    lda buttons2
-    eor buttons2pre
-    and buttons2
-    and #BUTTON_A
-    beq Player2ControllDone
-    lda #$0F
-    sta player2_stelth
-
-.ASound:
-    lda $4015   ; enable sound
-    ora #%00000010
-    sta $4015
-
-    lda #%10011111
-    sta $4004
-    lda #%10101100
-    sta $4005
-    lda #%00000100
-    sta $4006
-    lda #%11100001
-    sta $4007
-
-Player2ControllDone:
-Player2StelthDec:
-    lda #$00
-    sta player2_sword_state
-    lda player2_stelth
-    beq Player2StelthDecDone
-    lda player2_stelth
-    lsr a
-    sta player2_sword_state
-    dec player2_stelth
-Player2StelthDecDone:
-
-
-Player1SwordHit:
-    lda player1_stelth
-    beq .label1
-    lda player1_sword_x
-    add #PLAYER1_SWORD_WIDTH
-    sta tmp
-    lda player2_x
-    cmp tmp ; p2x < p1sx+p1sw
-    bcs .label1
-    lda player2_x
-    add #PLAYER2_WIDTH
-    sta tmp
-    lda player1_sword_x
-    cmp tmp   ; p1sx < p2x+p2w
-    bcs .label1
-    lda player1_sword_y
-    add #PLAYER1_SWORD_HEIGHT
-    sta tmp
-    lda player2_y
-    cmp tmp ; p2y < p1sy+p1sh
-    bcs .label1
-    lda player2_y
-    add #PLAYER2_HEIGHT
-    sta tmp
-    lda player1_sword_y
-    cmp tmp   ; p1sy < p2y+p2h
-    bcs .label1
-    lda player1_sword_hit
-    bne Player1SwordHitDone
-    lda #$01
-    sta player1_sword_hit
-    dec player2_life
-
-.Player2Damage:
-    lda #%00001000
-    sta $4015
-    lda #%11000001
-    sta $400C
-    lda #%00001100
-    sta $400E
-    lda #%00010011
-    sta $400F
-.Player2DamageDone:
-
-    jmp Player1SwordHitDone
-.label1:
-    lda #$00
-    sta player1_sword_hit
-Player1SwordHitDone:
-
-Player2SwordHit:
-    lda player2_stelth
-    beq .label1
-    lda player2_sword_x
-    add #PLAYER2_SWORD_WIDTH
-    sta tmp
-    lda player1_x
-    cmp tmp ; p1x < p2sx+p2sw
-    bcs .label1
-    lda player1_x
-    add #PLAYER1_WIDTH
-    sta tmp
-    lda player2_sword_x
-    cmp tmp   ; p1sx < p2x+p2w
-    bcs .label1
-    lda player2_sword_y
-    add #PLAYER2_SWORD_HEIGHT
-    sta tmp
-    lda player1_y
-    cmp tmp ; p1y < p2sy+p2sh
-    bcs .label1
-    lda player1_y
-    add #PLAYER1_HEIGHT
-    sta tmp
-    lda player2_sword_y
-    cmp tmp   ; p1sy < p2y+p2h
-    bcs .label1
-    lda player2_sword_hit
-    bne Player2SwordHitDone
-    lda #$01
-    sta player2_sword_hit
-    dec player1_life
-
-.Player1Damage:
-    lda #%00001000
-    sta $4015
-    lda #%11000001
-    sta $400C
-    lda #%00000100
-    sta $400E
-    lda #%00010011
-    sta $400F
-.Player1DamageDone:
-
-    jmp Player2SwordHitDone
-.label1:
-    lda #$00
-    sta player2_sword_hit
-Player2SwordHitDone:
-
-
-Player1SpriteUpdate:
-    lda player1_y
-    sta PLAYER1_Y
-    lda player1_sword_y
-    sta PLAYER1_SWORD_Y
-    lda player1_stelth
-    bne .label1
-
-    lda #$0F
-    sta PLAYER1_SPR
-    sta PLAYER1_SWORD_SPR
-;    lda #$00
-;    sta PLAYER1_SPR
-;    lda #$20
-;    sta PLAYER1_SWORD_SPR
-
-    jmp .label2
-.label1:
-    lda player1_spr
-    sta PLAYER1_SPR
-    lda player1_sword_spr
-    add player1_sword_state
-    sta PLAYER1_SWORD_SPR
-.label2:
-    lda player1_x
-    sta PLAYER1_X
-    lda player1_sword_x
-    sta PLAYER1_SWORD_X
-Player1SpriteUpdateDone:
-Player2SpriteUpdate:
-    lda player2_y
-    sta PLAYER2_Y
-    lda player2_sword_y
-    sta PLAYER2_SWORD_Y
-    lda player2_stelth
-    bne .label1
-
-    lda #$0F
-    sta PLAYER2_SPR
-    sta PLAYER2_SWORD_SPR
-;    lda #$00
-;    sta PLAYER2_SPR
-;    lda #$20
-;    sta PLAYER2_SWORD_SPR
-    
-    jmp .label2
-.label1:
-    lda player2_spr
-    sta PLAYER2_SPR
-    lda player2_sword_spr
-    add player2_sword_state
-    sta PLAYER2_SWORD_SPR
-.label2:
-    lda player2_x
-    sta PLAYER2_X
-    lda player2_sword_x
-    sta PLAYER2_SWORD_X
-Player2SpriteUpdateDone:
-
-Player1Dead:
-    lda player1_life
-    bne Plater1DeadDone
-    jmp GameOverInit
-Plater1DeadDone:
-Player2Dead:
-    lda player2_life
-    bne GameOverInitDone
-    jmp GameOverInit
-Plater2DeadDone:
-GameOverInit:
-    lda #STATE_OVER
-    sta game_state
-    lda #0
-    sta window_counter
-GameOverInitDone:
-
-    rts
-
-;Over scene
-;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-EngineOver:
-
-ShowWinnerWindow:
-    lda window_counter
-    cmp #$A0
-    beq ShowWinnerWindowTileDone
-ShowWinnerWindowTile:
-    lda #$C0
-    add window_counter
-    sta ppu_addr_low
-    lda #$22
-    adc #0
-    sta ppu_addr_high
-
-    lda #LOW(winerWindow)
-    add window_counter
-    sta source_addr_low
-    lda #HIGH(winerWindow)
-    adc #0
-    sta source_addr_high
-
-    lda ppu_addr_high
-    sta $2006
-    lda ppu_addr_low
-    sta $2006
-    ldy #0
-.Loop:
-    lda [source_addr_low], y
-    sta $2007
-    iny
-    cpy #$10
-    bne .Loop
-ShowWinnerWindowTileDone:
-    lda window_counter
-    cmp #$A0
-    beq ShowWinnerWindowAttrDone
-ShowWinnerWindowAttr:
-    lda window_counter
-    lsr a
-    lsr a
-    add #$E8
-    sta ppu_addr_low
-    lda #$23
-    adc #0
-    sta ppu_addr_high
-
-    lda player2_life
-    bne .Player2Win
-.Player1Win:
-    lda window_counter
-    lsr a
-    lsr a
-    add #LOW(winerWindowAttr1)
-    sta source_addr_low
-    lda #HIGH(winerWindowAttr1)
-    adc #0
-    sta source_addr_high
-    jmp .JudgeDone
-.Player2Win:
-    lda window_counter
-    lsr a
-    lsr a
-    add #LOW(winerWindowAttr2)
-    sta source_addr_low
-    lda #HIGH(winerWindowAttr2)
-    adc #0
-    sta source_addr_high
-.JudgeDone:
-
-    lda ppu_addr_high
-    sta $2006
-    lda ppu_addr_low
-    sta $2006
-    ldy #0
-.Loop:
-    lda [source_addr_low], y
-    sta $2007
-    iny
-    cpy #$04
-    bne .Loop
-
-    lda window_counter
-    add #$10
-    sta window_counter
-ShowWinnerWindowAttrDone:
-
-
-ShowWinner:
-    lda #$23
-    sta $2006
-    lda #$10
-    sta $2006
-    lda player2_life
-    bne Player2Win
-Player1Win:
-    lda #$1A
-    sta $2007
-    jmp ShowWinnerDone
-Player2Win:
-    lda #$1B
-    sta $2007
-ShowWinnerDone:
-
-
-    lda #$00
-    sta $2003
-    lda #$02
-    sta $4014; sprite DMA
-
-    lda #%10010000  ; PPU clean up
-    sta $2000
-    lda #%00011110
-    sta $2001
-    lda #$00
-    sta $2005
-    sta $2005
-
-Player1StelthDecOver:
-    lda #$00
-    sta player1_sword_state
-    lda player1_stelth
-    beq Player1StelthDecOverDone
-    lda player1_stelth
-    lsr a
-    sta player1_sword_state
-    dec player1_stelth
-Player1StelthDecOverDone:
-Player2StelthDecOver:
-    lda #$00
-    sta player2_sword_state
-    lda player2_stelth
-    beq Player2StelthDecOverDone
-    lda player2_stelth
-    lsr a
-    sta player2_sword_state
-    dec player2_stelth
-Player2StelthDecOverDone:
-
-Player1SpriteUpdateOver:
-    lda player1_spr
-    sta PLAYER1_SPR
-    lda player1_sword_spr
-    add player1_sword_state
-    sta PLAYER1_SWORD_SPR
-Player1SpriteUpdateOverDone:
-Player2SpriteUpdateOver:
-    lda player2_spr
-    sta PLAYER2_SPR
-    lda player2_sword_spr
-    add player2_sword_state
-    sta PLAYER2_SWORD_SPR
-Player2SpriteUpdateOverDone:
-
-    lda window_counter
-    cmp #$A0
-    bne NotRestart
-
-    lda buttons1
-    eor buttons1pre
-    and buttons1
-    cmp #$10
-    bne NotRestart
-Restart:
-    jmp RESET
-NotRestart:
-
-    rts
-
-
-
-;IRQ
-;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-IRQ:
-
-
-    rti
-
-
-;Sub routine
-;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-ReadController1:
-    lda buttons1
-    sta buttons1pre
-    lda #$01
-    sta $4016
-    lda #$00
-    sta $4016
-    ldx #$08
-.ReadController1Loop:
-    lda $4016
-    lsr a
-    rol buttons1
-    dex
-    bne .ReadController1Loop
-
-    rts
-;;;;;
-
-ReadController2:
-    lda buttons2
-    sta buttons2pre
-    lda #$01
-    sta $4017
-    lda #$00
-    sta $4017
-    ldx #$08
-.ReadController2Loop:
-    lda $4017
-    lsr a
-    rol buttons2
-    dex
-    bne .ReadController2Loop
-
-    rts
-
-;Some datas
-;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    jmp main
 
 initBankTable:
     .db $00,$02,$04,$05,$06,$07,$00,$00
 
-palette:
-    .incbin "palette.pal"
-
-titleNametable:
-    .incbin "title.tile"
-titleAttr:
-    .incbin "title.attr"
-
-playingNametable:
-    .incbin "playing_beta.tile"
-playingAttr:
-    .incbin "playing_beta.attr"
-
-winerWindow:
-    .incbin "winner_window.tile"
-winerWindowAttr1:
-    .incbin "winner_window1.attr"
-winerWindowAttr2:
-    .incbin "winner_window2.attr"
-
-;Vectors
-;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    .bank 1
     .org $FFFA
     .dw NMI
     .dw RESET
