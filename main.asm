@@ -63,7 +63,7 @@ PLAYER1_LIFE_HIGH = $E8
 PLAYER2_LIFE_LOW = $22
 PLAYER2_LIFE_HIGH = $F8
 
-LIFE_INIT = $04
+LIFE_INIT = $03
 
 
 ;Declare some macros here
@@ -251,9 +251,9 @@ TitleAttrs:
 ;Variable initialize
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-    lda #$00
-    sta tmp
-    sta arg
+    lda #$FF
+    sta buttons1
+    sta buttons1pre
 
     lda #STATE_TITLE
     sta game_state
@@ -319,8 +319,10 @@ GameEngineDone:
 EngineTitle:
 
     lda buttons1
-    and #BUTTON_START
-    beq .NotStart
+    eor buttons1pre
+    and buttons1
+    cmp #BUTTON_START
+    bne .NotStart
     jsr LoadPlaying
 .NotStart:
     rts
@@ -1079,11 +1081,12 @@ Player2SpriteUpdateOverDone:
     lda window_counter
     cmp #$A0
     bne NotRestart
+
     lda buttons1
-    bne Restart
-    lda buttons2
-    bne Restart
-    jmp NotRestart
+    eor buttons1pre
+    and buttons1
+    cmp #$10
+    bne NotRestart
 Restart:
     jmp RESET
 NotRestart:
