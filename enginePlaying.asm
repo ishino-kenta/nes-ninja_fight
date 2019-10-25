@@ -24,7 +24,7 @@ playerLifeDec:
     lda #$00
     sta $2003
     lda #$02
-    sta $4014; sprite DMA
+    sta $4014 ; sprite DMA
 
     lda #%10010000  ; PPU clean up
     sta $2000
@@ -34,106 +34,36 @@ playerLifeDec:
     sta $2005
     sta $2005
 
-player1Controll:
-.Right:
+    lda #$FE
+    sta PLAYER1_COLLISION_Y
+    lda #$FE
+    sta PLAYER1_COLLISION_SPR
+    lda #$FE
+    sta PLAYER1_COLLISION_ATTR
+    lda #$FE
+    sta PLAYER1_COLLISION_X
 
-    lda conroller1
-    and #BUTTON_RIGHT
-    beq .Left
-
-    ldx #$08
-    ldy #$01
-    jsr checkTile
-    cmp #FLOOR
+    lda #BUTTON_DOWN + BUTTON_LEFT + BUTTON_RIGHT + BUTTON_UP
+    and #$0F
     bne .1
-    ldx #$08
-    ldy #$08
-    jsr checkTile
-    cmp #FLOOR
-    bne .1
-    inc player1_x
+    lda player1_x
+    sta player1_sword_x
+    lda player1_y
+    sta player1_sword_y
 .1:
-    lda #DIRECTION_RIGHT
-    sta player1_spr
-    lda player1_x
-    clc
-	adc #$07
-    sta player1_sword_x
-    lda player1_y
-    sta player1_sword_y
-    lda #$20
-    sta player1_sword_spr
-.Left:
-    lda conroller1
-    and #BUTTON_LEFT
-    beq .Up
 
-    ldx #$FF
-    ldy #$01
-    jsr checkTile
-    cmp #FLOOR
-    bne .2
-    ldx #$FF
-    ldy #$08
-    jsr checkTile
-    cmp #FLOOR
-    bne .2
-    dec player1_x
-.2:
-    lda #DIRECTION_LEFT
-    sta player1_spr
-    lda player1_x
-    sec
-	sbc  #$07
-    sta player1_sword_x
-    lda player1_y
-    sta player1_sword_y
-    lda #$30
-    sta player1_sword_spr
-.Up:
-    lda conroller1
-    and #BUTTON_UP
-    beq .Down
+player1Controll:
+    lda #$00
+    sta tmp3
 
-    ldx #$00
-    ldy #$00
-    jsr checkTile
-    cmp #FLOOR
-    bne .3
-    ldx #$07
-    ldy #$00
-    jsr checkTile
-    cmp #FLOOR
-    bne .3
-    dec player1_y
-.3:
-    lda #DIRECTION_UP
-    sta player1_spr
-    lda player1_x
-    sta player1_sword_x
-    lda player1_y
-    sec
-	sbc  #$07
-    sta player1_sword_y
-    lda #$40
-    sta player1_sword_spr
-.Down:
+.down:
     lda conroller1
     and #BUTTON_DOWN
-    beq .A
+    beq .right
 
-    ldx #$00
-    ldy #$09
-    jsr checkTile
-    cmp #FLOOR
-    bne .4
-    ldx #$07
-    ldy #$09
-    jsr checkTile
-    cmp #FLOOR
-    bne .4
-    inc player1_y
-.4:
+    lda #$01
+    sta tmp3
+
     lda #DIRECTION_DOWN
     sta player1_spr
     lda player1_x
@@ -144,14 +74,144 @@ player1Controll:
     sta player1_sword_y
     lda #$50
     sta player1_sword_spr
+
+    lda player1_atacking_timer
+    bne .right
+
+    ldx #$00
+    ldy #$09
+    jsr checkTile
+    cmp #FLOOR
+    bne .right
+    ldx #$07
+    ldy #$09
+    jsr checkTile
+    cmp #FLOOR
+    bne .right
+    inc player1_y
+
+.right:
+    lda tmp3
+    bne .left
+
+    lda conroller1
+    and #BUTTON_RIGHT
+    beq .left
+
+    lda #$01
+    sta tmp3
+
+    lda #DIRECTION_RIGHT
+    sta player1_spr
+    lda player1_x
+    clc
+	adc #$07
+    sta player1_sword_x
+    lda player1_y
+    sta player1_sword_y
+    lda #$20
+    sta player1_sword_spr
+
+    lda player1_atacking_timer
+    bne .left
+
+    ldx #$08    ; collision detection
+    ldy #$01
+    jsr checkTile
+    cmp #FLOOR
+    bne .left
+    ldx #$08
+    ldy #$08
+    jsr checkTile
+    cmp #FLOOR
+    bne .left
+    inc player1_x
+    jmp .left
+
+.left:
+    lda tmp3
+    bne .up
+
+    lda conroller1
+    and #BUTTON_LEFT
+    beq .up
+
+    lda #$01
+    sta tmp3
+
+    lda #DIRECTION_LEFT
+    sta player1_spr
+    lda player1_x
+    sec
+	sbc #$07
+    sta player1_sword_x
+    lda player1_y
+    sta player1_sword_y
+    lda #$30
+    sta player1_sword_spr
+
+    lda player1_atacking_timer
+    bne .up
+
+    ldx #$FF
+    ldy #$01
+    jsr checkTile
+    cmp #FLOOR
+    bne .up
+    ldx #$FF
+    ldy #$08
+    jsr checkTile
+    cmp #FLOOR
+    bne .up
+    dec player1_x
+    lda #TRUE
+    jmp .up
+
+.up:
+    lda tmp3
+    bne .A
+
+    lda conroller1
+    and #BUTTON_UP
+    beq .A
+
+    lda #DIRECTION_UP
+    sta player1_spr
+    lda player1_x
+    sta player1_sword_x
+    lda player1_y
+    sec
+	sbc #$07
+    sta player1_sword_y
+    lda #$40
+    sta player1_sword_spr
+
+    lda player1_atacking_timer
+    bne .A
+
+    ldx #$00
+    ldy #$FF
+    jsr checkTile
+    cmp #FLOOR
+    bne .A
+    ldx #$07
+    ldy #$FF
+    jsr checkTile
+    cmp #FLOOR
+    bne .A
+    dec player1_y
+    jmp .A
+
 .A:
     lda conroller1
     eor conroller1pre
     and conroller1
     and #BUTTON_A
-    beq Player1ControllDone
+    beq .B
+    lda player1_atacking_timer
+    bne .B
     lda #$0F
-    sta player1_stelth
+    sta player1_atacking_timer
 
 .ASound:
     lda $4015   ; enable sound
@@ -166,17 +226,29 @@ player1Controll:
     sta $4002
     lda #%11100100
     sta $4003
-Player1ControllDone:
-Player1StelthDec:
-    lda #$00
-    sta player1_sword_state
+
+.B:
+    lda conroller1
+    eor conroller1pre
+    and conroller1
+    and #BUTTON_B
+    beq .done
+    lda player1_atacking_timer
+    bne .done
     lda player1_stelth
-    beq Player1StelthDecDone
-    lda player1_stelth
+    eor #$FF
+    sta player1_stelth
+.done:
+player1AatckingDec:
+    lda player1_atacking_timer
+    beq .1
+    dec player1_atacking_timer
+.1:
+    lda player1_atacking_timer
     lsr a
     sta player1_sword_state
-    dec player1_stelth
-Player1StelthDecDone:
+.done:
+
 
 Player2Controll:
 .Right:
@@ -308,7 +380,7 @@ Player2StelthDecDone:
 
 
 Player1SwordHit:
-    lda player1_stelth
+    lda player1_atacking_timer
     beq .label1
     lda player1_sword_x
     clc
@@ -416,15 +488,20 @@ Player2SwordHit:
 Player2SwordHitDone:
 
 
+    lda player1_atacking_timer
+    beq .1
+    lda #TRUE
+    jmp .2
+.1:
+    lda #FALSE
+.2:
+    sta player1_stelth
 Player1SpriteUpdate:
     lda player1_y
     sta PLAYER1_Y
     lda player1_sword_y
     sta PLAYER1_SWORD_Y
     lda player1_stelth
-;;;test
-    jmp .label1
-;;;
     bne .label1
 
     lda #$0F

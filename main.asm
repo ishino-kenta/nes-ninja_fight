@@ -8,6 +8,9 @@
 ;Declare some constants here
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
+TRUE = $01
+FALSE = $00
+
 STATE_TITLE = 0
 STATE_PLAYING = 1
 STATE_OVER = 2
@@ -48,6 +51,10 @@ PLAYER1_SWORD_Y = $0208
 PLAYER1_SWORD_SPR = $0209
 PLAYER1_SWORD_ATTR = $020A
 PLAYER1_SWORD_X = $020B
+PLAYER1_COLLISION_Y = $0210
+PLAYER1_COLLISION_SPR = $0211
+PLAYER1_COLLISION_ATTR = $0212
+PLAYER1_COLLISION_X = $0213
 
 PLAYER2_Y = $0204
 PLAYER2_SPR = $0205
@@ -103,6 +110,9 @@ player1_hit_top_right   .rs 1
 player1_hit_top_left   .rs 1
 player1_hit_bottom_right   .rs 1
 player1_hit_bottom_left   .rs 1
+player1_atacking_timer    .rs 1
+player1_hit_wall    .rs 1
+player1_hit_wall_counter    .rs 1
 
 
 
@@ -121,6 +131,7 @@ window_counter  .rs 1
 
 tmp .rs 1
 tmp2    .rs 1
+tmp3    .rs 1
 source_addr_low    .rs 1
 source_addr_high   .rs 1
 ppu_addr_low    .rs 1
