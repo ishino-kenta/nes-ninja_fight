@@ -34,15 +34,6 @@ playerLifeDec:
     sta $2005
     sta $2005
 
-    lda #$FE
-    sta PLAYER1_COLLISION_Y
-    lda #$FE
-    sta PLAYER1_COLLISION_SPR
-    lda #$FE
-    sta PLAYER1_COLLISION_ATTR
-    lda #$FE
-    sta PLAYER1_COLLISION_X
-
     lda #BUTTON_DOWN + BUTTON_LEFT + BUTTON_RIGHT + BUTTON_UP
     and #$0F
     bne .1
@@ -80,12 +71,12 @@ player1Controll:
 
     ldx #$00
     ldy #$09
-    jsr checkTile
+    jsr checkTilePlayer1
     cmp #FLOOR
     bne .right
     ldx #$07
     ldy #$09
-    jsr checkTile
+    jsr checkTilePlayer1
     cmp #FLOOR
     bne .right
     inc player1_y
@@ -117,12 +108,12 @@ player1Controll:
 
     ldx #$08    ; collision detection
     ldy #$01
-    jsr checkTile
+    jsr checkTilePlayer1
     cmp #FLOOR
     bne .left
     ldx #$08
     ldy #$08
-    jsr checkTile
+    jsr checkTilePlayer1
     cmp #FLOOR
     bne .left
     inc player1_x
@@ -155,12 +146,12 @@ player1Controll:
 
     ldx #$FF
     ldy #$01
-    jsr checkTile
+    jsr checkTilePlayer1
     cmp #FLOOR
     bne .up
     ldx #$FF
     ldy #$08
-    jsr checkTile
+    jsr checkTilePlayer1
     cmp #FLOOR
     bne .up
     dec player1_x
@@ -191,12 +182,12 @@ player1Controll:
 
     ldx #$00
     ldy #$FF
-    jsr checkTile
+    jsr checkTilePlayer1
     cmp #FLOOR
     bne .A
     ldx #$07
     ldy #$FF
-    jsr checkTile
+    jsr checkTilePlayer1
     cmp #FLOOR
     bne .A
     dec player1_y
@@ -250,89 +241,18 @@ player1AatckingDec:
 .done:
 
 
-Player2Controll:
-.Right:
-    lda player2_stelth
-    bne .Left
-    lda conroller2
-    and #BUTTON_RIGHT
-    beq .Left
-    inc player2_x
-    lda player2_x
-    cmp #WALL_RIGHT-PLAYER2_WIDTH
-    bcc .1
-    lda #WALL_RIGHT-PLAYER2_WIDTH
-    sta player2_x
-.1:
-    lda #DIRECTION_RIGHT
-    sta player2_spr
-    lda player2_x
-    clc
-	adc #$07
-    sta player2_sword_x
-    lda player2_y
-    sta player2_sword_y
-    lda #$20
-    sta player2_sword_spr
-.Left:
-    lda player2_stelth
-    bne .Up
-    lda conroller2
-    and #BUTTON_LEFT
-    beq .Up
-    dec player2_x
-    lda player2_x
-    cmp #WALL_LEFT
-    bcs .2
-    lda #WALL_LEFT
-    sta player2_x
-.2:
-    lda #DIRECTION_LEFT
-    sta player2_spr
-    lda player2_x
-    sec
-	sbc  #$07
-    sta player2_sword_x
-    lda player2_y
-    sta player2_sword_y
-    lda #$30
-    sta player2_sword_spr
-.Up:
-    lda player2_stelth
-    bne .Down
-    lda conroller2
-    and #BUTTON_UP
-    beq .Down
-    dec player2_y
-    lda player2_y
-    cmp #WALL_TOP
-    bcs .3
-    lda #WALL_TOP
-    sta player2_y
-.3:
-    lda #DIRECTION_UP
-    sta player2_spr
-    lda player2_x
-    sta player2_sword_x
-    lda player2_y
-    sec
-	sbc  #$07
-    sta player2_sword_y
-    lda #$40
-    sta player2_sword_spr
-.Down:
-    lda player2_stelth
-    bne .A
+player2Controll:
+    lda #$00
+    sta tmp3
+
+.down:
     lda conroller2
     and #BUTTON_DOWN
-    beq .A
-    inc player2_y
-    lda player2_y
-    cmp #WALL_BOTTOM-PLAYER2_HEIGHT
-    bcc .4
-    lda #WALL_BOTTOM-PLAYER2_HEIGHT
-    sta player2_y
-.4:
+    beq .right
+
+    lda #$01
+    sta tmp3
+
     lda #DIRECTION_DOWN
     sta player2_spr
     lda player2_x
@@ -343,40 +263,180 @@ Player2Controll:
     sta player2_sword_y
     lda #$50
     sta player2_sword_spr
+
+    lda player2_atacking_timer
+    bne .right
+
+    ldx #$00
+    ldy #$09
+    jsr checkTilePlayer2
+    cmp #FLOOR
+    bne .right
+    ldx #$07
+    ldy #$09
+    jsr checkTilePlayer2
+    cmp #FLOOR
+    bne .right
+    inc player2_y
+
+.right:
+    lda tmp3
+    bne .left
+
+    lda conroller2
+    and #BUTTON_RIGHT
+    beq .left
+
+    lda #$01
+    sta tmp3
+
+    lda #DIRECTION_RIGHT
+    sta player2_spr
+    lda player2_x
+    clc
+	adc #$07
+    sta player2_sword_x
+    lda player2_y
+    sta player2_sword_y
+    lda #$20
+    sta player2_sword_spr
+
+    lda player2_atacking_timer
+    bne .left
+
+    ldx #$08    ; collision detection
+    ldy #$01
+    jsr checkTilePlayer2
+    cmp #FLOOR
+    bne .left
+    ldx #$08
+    ldy #$08
+    jsr checkTilePlayer2
+    cmp #FLOOR
+    bne .left
+    inc player2_x
+    jmp .left
+
+.left:
+    lda tmp3
+    bne .up
+
+    lda conroller2
+    and #BUTTON_LEFT
+    beq .up
+
+    lda #$01
+    sta tmp3
+
+    lda #DIRECTION_LEFT
+    sta player2_spr
+    lda player2_x
+    sec
+	sbc #$07
+    sta player2_sword_x
+    lda player2_y
+    sta player2_sword_y
+    lda #$30
+    sta player2_sword_spr
+
+    lda player2_atacking_timer
+    bne .up
+
+    ldx #$FF
+    ldy #$01
+    jsr checkTilePlayer2
+    cmp #FLOOR
+    bne .up
+    ldx #$FF
+    ldy #$08
+    jsr checkTilePlayer2
+    cmp #FLOOR
+    bne .up
+    dec player2_x
+    lda #TRUE
+    jmp .up
+
+.up:
+    lda tmp3
+    bne .A
+
+    lda conroller2
+    and #BUTTON_UP
+    beq .A
+
+    lda #DIRECTION_UP
+    sta player2_spr
+    lda player2_x
+    sta player2_sword_x
+    lda player2_y
+    sec
+	sbc #$07
+    sta player2_sword_y
+    lda #$40
+    sta player2_sword_spr
+
+    lda player2_atacking_timer
+    bne .A
+
+    ldx #$00
+    ldy #$FF
+    jsr checkTilePlayer2
+    cmp #FLOOR
+    bne .A
+    ldx #$07
+    ldy #$FF
+    jsr checkTilePlayer2
+    cmp #FLOOR
+    bne .A
+    dec player2_y
+    jmp .A
+
 .A:
     lda conroller2
     eor conroller2pre
     and conroller2
     and #BUTTON_A
-    beq Player2ControllDone
+    beq .B
+    lda player2_atacking_timer
+    bne .B
     lda #$0F
-    sta player2_stelth
+    sta player2_atacking_timer
 
 .ASound:
     lda $4015   ; enable sound
-    ora #%00000010
+    ora #%00000001
     sta $4015
 
     lda #%10011111
-    sta $4004
+    sta $4000
     lda #%10101100
-    sta $4005
+    sta $4001
     lda #%00000100
-    sta $4006
-    lda #%11100001
-    sta $4007
+    sta $4002
+    lda #%11100100
+    sta $4003
 
-Player2ControllDone:
-Player2StelthDec:
-    lda #$00
-    sta player2_sword_state
+.B:
+    lda conroller2
+    eor conroller2pre
+    and conroller2
+    and #BUTTON_B
+    beq .done
+    lda player2_atacking_timer
+    bne .done
     lda player2_stelth
-    beq Player2StelthDecDone
-    lda player2_stelth
+    eor #$FF
+    sta player2_stelth
+.done:
+player2AatckingDec:
+    lda player2_atacking_timer
+    beq .1
+    dec player2_atacking_timer
+.1:
+    lda player2_atacking_timer
     lsr a
     sta player2_sword_state
-    dec player2_stelth
-Player2StelthDecDone:
+.done:
 
 
 Player1SwordHit:
@@ -487,7 +547,7 @@ Player2SwordHit:
     sta player2_sword_hit
 Player2SwordHitDone:
 
-
+Player1SpriteUpdate:
     lda player1_atacking_timer
     beq .1
     lda #TRUE
@@ -496,7 +556,7 @@ Player2SwordHitDone:
     lda #FALSE
 .2:
     sta player1_stelth
-Player1SpriteUpdate:
+
     lda player1_y
     sta PLAYER1_Y
     lda player1_sword_y
@@ -525,8 +585,17 @@ Player1SpriteUpdate:
     sta PLAYER1_X
     lda player1_sword_x
     sta PLAYER1_SWORD_X
-Player1SpriteUpdateDone:
+
 Player2SpriteUpdate:
+    lda player2_atacking_timer
+    beq .1
+    lda #TRUE
+    jmp .2
+.1:
+    lda #FALSE
+.2:
+    sta player2_stelth
+
     lda player2_y
     sta PLAYER2_Y
     lda player2_sword_y
@@ -541,7 +610,7 @@ Player2SpriteUpdate:
 ;    sta PLAYER2_SPR
 ;    lda #$20
 ;    sta PLAYER2_SWORD_SPR
-    
+
     jmp .label2
 .label1:
     lda player2_spr
@@ -555,7 +624,6 @@ Player2SpriteUpdate:
     sta PLAYER2_X
     lda player2_sword_x
     sta PLAYER2_SWORD_X
-Player2SpriteUpdateDone:
 
 Player1Dead:
     lda player1_life

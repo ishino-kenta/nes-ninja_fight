@@ -51,10 +51,6 @@ PLAYER1_SWORD_Y = $0208
 PLAYER1_SWORD_SPR = $0209
 PLAYER1_SWORD_ATTR = $020A
 PLAYER1_SWORD_X = $020B
-PLAYER1_COLLISION_Y = $0210
-PLAYER1_COLLISION_SPR = $0211
-PLAYER1_COLLISION_ATTR = $0212
-PLAYER1_COLLISION_X = $0213
 
 PLAYER2_Y = $0204
 PLAYER2_SPR = $0205
@@ -102,18 +98,7 @@ player1_sword_spr   .rs 1
 player1_sword_state .rs 1
 player1_sword_hit   .rs 1
 player1_life    .rs 1
-player1_hit_right_top    .rs 1
-player1_hit_right_bottom   .rs 1
-player1_hit_left_top    .rs 1
-player1_hit_left_bottom   .rs 1
-player1_hit_top_right   .rs 1
-player1_hit_top_left   .rs 1
-player1_hit_bottom_right   .rs 1
-player1_hit_bottom_left   .rs 1
 player1_atacking_timer    .rs 1
-player1_hit_wall    .rs 1
-player1_hit_wall_counter    .rs 1
-
 
 
 player2_x   .rs 1
@@ -126,6 +111,7 @@ player2_sword_spr   .rs 1
 player2_sword_state .rs 1
 player2_sword_hit   .rs 1
 player2_life    .rs 1
+player2_atacking_timer    .rs 1
 
 window_counter  .rs 1
 
