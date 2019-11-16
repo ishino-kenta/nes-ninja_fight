@@ -66,7 +66,7 @@ PLAYER1_LIFE_HIGH = $E8
 PLAYER2_LIFE_LOW = $22
 PLAYER2_LIFE_HIGH = $F8
 
-LIFE_INIT = $03
+LIFE_INIT = $04
 
 
 ;Declare some macros here

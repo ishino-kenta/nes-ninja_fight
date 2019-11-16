@@ -51,6 +51,9 @@ player1Controll:
     lda conroller1
     and #BUTTON_DOWN
     beq .right
+    lda player1_atacking_timer
+    bne .right
+    
 
     lda #$01
     sta tmp3
@@ -65,9 +68,6 @@ player1Controll:
     sta player1_sword_y
     lda #$50
     sta player1_sword_spr
-
-    lda player1_atacking_timer
-    bne .right
 
     ldx #$00
     ldy #$09
@@ -88,6 +88,8 @@ player1Controll:
     lda conroller1
     and #BUTTON_RIGHT
     beq .left
+    lda player1_atacking_timer
+    bne .left
 
     lda #$01
     sta tmp3
@@ -102,9 +104,6 @@ player1Controll:
     sta player1_sword_y
     lda #$20
     sta player1_sword_spr
-
-    lda player1_atacking_timer
-    bne .left
 
     ldx #$08    ; collision detection
     ldy #$01
@@ -126,6 +125,8 @@ player1Controll:
     lda conroller1
     and #BUTTON_LEFT
     beq .up
+    lda player1_atacking_timer
+    bne .up
 
     lda #$01
     sta tmp3
@@ -140,9 +141,6 @@ player1Controll:
     sta player1_sword_y
     lda #$30
     sta player1_sword_spr
-
-    lda player1_atacking_timer
-    bne .up
 
     ldx #$FF
     ldy #$01
@@ -165,6 +163,8 @@ player1Controll:
     lda conroller1
     and #BUTTON_UP
     beq .A
+    lda player1_atacking_timer
+    bne .A
 
     lda #DIRECTION_UP
     sta player1_spr
@@ -176,9 +176,6 @@ player1Controll:
     sta player1_sword_y
     lda #$40
     sta player1_sword_spr
-
-    lda player1_atacking_timer
-    bne .A
 
     ldx #$00
     ldy #$FF
@@ -249,6 +246,8 @@ player2Controll:
     lda conroller2
     and #BUTTON_DOWN
     beq .right
+    lda player2_atacking_timer
+    bne .right
 
     lda #$01
     sta tmp3
@@ -263,9 +262,6 @@ player2Controll:
     sta player2_sword_y
     lda #$50
     sta player2_sword_spr
-
-    lda player2_atacking_timer
-    bne .right
 
     ldx #$00
     ldy #$09
@@ -286,6 +282,8 @@ player2Controll:
     lda conroller2
     and #BUTTON_RIGHT
     beq .left
+    lda player2_atacking_timer
+    bne .left
 
     lda #$01
     sta tmp3
@@ -300,9 +298,6 @@ player2Controll:
     sta player2_sword_y
     lda #$20
     sta player2_sword_spr
-
-    lda player2_atacking_timer
-    bne .left
 
     ldx #$08    ; collision detection
     ldy #$01
@@ -324,6 +319,8 @@ player2Controll:
     lda conroller2
     and #BUTTON_LEFT
     beq .up
+    lda player2_atacking_timer
+    bne .up
 
     lda #$01
     sta tmp3
@@ -338,9 +335,6 @@ player2Controll:
     sta player2_sword_y
     lda #$30
     sta player2_sword_spr
-
-    lda player2_atacking_timer
-    bne .up
 
     ldx #$FF
     ldy #$01
@@ -363,6 +357,8 @@ player2Controll:
     lda conroller2
     and #BUTTON_UP
     beq .A
+    lda player2_atacking_timer
+    bne .A
 
     lda #DIRECTION_UP
     sta player2_spr
@@ -374,9 +370,6 @@ player2Controll:
     sta player2_sword_y
     lda #$40
     sta player2_sword_spr
-
-    lda player2_atacking_timer
-    bne .A
 
     ldx #$00
     ldy #$FF
@@ -489,6 +482,7 @@ Player1SwordHit:
 
     jmp Player1SwordHitDone
 .label1:
+
     lda #$00
     sta player1_sword_hit
 Player1SwordHitDone:
