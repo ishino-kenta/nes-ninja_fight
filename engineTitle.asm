@@ -111,7 +111,7 @@ loadPlayingCont:
     sta player1_x
     sta player1_sword_y
     clc
-	adc #$08
+	adc #$07
     sta player1_sword_x
     lda #$00
     sta player1_spr
@@ -126,7 +126,7 @@ loadPlayingCont:
     sta player2_x
     sta player2_sword_y
     sec
-	sbc  #$08
+	sbc #$08
     sta player2_sword_x
     lda #$01
     sta player2_spr
@@ -139,5 +139,14 @@ loadPlayingCont:
     lda #LIFE_INIT
     sta player1_life
     sta player2_life
+
+    lda general_counter
+    and #$7F
+    ora #$A0
+    sta item_counter_inc
+
+    lda #$00
+    sta player1_speed_level
+    sta player2_speed_level
 
     rts

@@ -42,7 +42,7 @@ readController2:
 ; A: tile number
 ;memory
 ; tmp, tmp2
-checkTilePlayer1:
+checkTile:
     stx tmp
     sty tmp2
     
@@ -51,9 +51,7 @@ checkTilePlayer1:
     lda #HIGH(playingNametable)
     sta source_addr_high
 
-    lda player1_x
-    clc
-    adc tmp
+    lda tmp
     lsr a
     lsr a
     lsr a
@@ -66,9 +64,7 @@ checkTilePlayer1:
 
     lda #$00
     sta tmp
-    lda player1_y
-    clc
-    adc tmp2
+    lda tmp2
     and #$F8
     asl a
     rol tmp
@@ -77,15 +73,12 @@ checkTilePlayer1:
     clc
     adc source_addr_low
     sta source_addr_low
-    sta test3
     lda source_addr_high
     adc tmp
     sta source_addr_high
-    sta test4
 
     ldy #$00
     lda [source_addr_low], y
-    sta test
 
     rts
 
@@ -133,14 +126,11 @@ checkTilePlayer2:
     clc
     adc source_addr_low
     sta source_addr_low
-    sta test3
     lda source_addr_high
     adc tmp
     sta source_addr_high
-    sta test4
 
     ldy #$00
     lda [source_addr_low], y
-    sta test
 
     rts

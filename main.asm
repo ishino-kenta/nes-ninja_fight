@@ -61,6 +61,11 @@ PLAYER2_SWORD_SPR = $020D
 PLAYER2_SWORD_ATTR = $020E
 PLAYER2_SWORD_X = $020F
 
+ITEM_Y = $0210
+ITEM_SPR = $0211
+ITEM_ATTR = $0212
+ITEM_X = $0213
+
 PLAYER1_LIFE_LOW = $22
 PLAYER1_LIFE_HIGH = $E8
 PLAYER2_LIFE_LOW = $22
@@ -99,6 +104,9 @@ player1_sword_state .rs 1
 player1_sword_hit   .rs 1
 player1_life    .rs 1
 player1_atacking_timer    .rs 1
+player1_speed   .rs 1
+player1_speed_level   .rs 1
+player1_move_flag   .rs 1
 
 
 player2_x   .rs 1
@@ -112,18 +120,33 @@ player2_sword_state .rs 1
 player2_sword_hit   .rs 1
 player2_life    .rs 1
 player2_atacking_timer    .rs 1
+player2_speed   .rs 1
+player2_speed_level   .rs 1
+player2_move_flag   .rs 1
 
 window_counter  .rs 1
 
 tmp .rs 1
 tmp2    .rs 1
 tmp3    .rs 1
+tmp4    .rs 1
 source_addr_low    .rs 1
 source_addr_high   .rs 1
 ppu_addr_low    .rs 1
 ppu_addr_high   .rs 1
 general_counter .rs 1
 arg .rs 1   ; argument for subroutine
+
+walk_counter    .rs 1
+
+item_flag .rs 1
+item_x  .rs 1
+item_y  .rs 1
+item_spr    .rs 1
+item_kind   .rs 1
+item_counter    .rs 2
+item_counter_inc    .rs 1
+
 
 ;Initial settings
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -222,6 +245,11 @@ titleAttrs:
     lda #$20
     sta player1_sword_spr
 
+    lda #$02
+    sta item_kind
+    lda #FALSE
+    sta player1_move_flag
+
     lda #%10010000  ; enable NMI
     sta $2000
     lda #%00011110  ; enable spr/BG
@@ -290,6 +318,7 @@ IRQ:
 
 
     .include "subroutine.asm"
+    .include "subroutinePlaying.asm"
 
 ;Some datas
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -303,9 +332,9 @@ titleAttr:
     .incbin "title.attr"
 
 playingNametable:
-    .incbin "playing_beta.tile"
+    .incbin "playing.tile"
 playingAttr:
-    .incbin "playing_beta.attr"
+    .incbin "playing.attr"
 
 winerWindow:
     .incbin "winner_window.tile"
