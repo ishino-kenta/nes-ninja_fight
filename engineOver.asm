@@ -1,10 +1,10 @@
 engineOver:
 
-ShowWinnerWindow:
+showWinnerWindow:
     lda window_counter
     cmp #$A0
-    beq ShowWinnerWindowTileDone
-ShowWinnerWindowTile:
+    beq .done
+.showWinnerWindowTile:
     lda #$C0
     clc
 	adc window_counter
@@ -32,11 +32,11 @@ ShowWinnerWindowTile:
     iny
     cpy #$10
     bne .Loop
-ShowWinnerWindowTileDone:
+.done:
     lda window_counter
     cmp #$A0
-    beq ShowWinnerWindowAttrDone
-ShowWinnerWindowAttr:
+    beq showWinnerWindowAttrDone
+showWinnerWindowAttr:
     lda window_counter
     lsr a
     lsr a
@@ -88,24 +88,24 @@ ShowWinnerWindowAttr:
     clc
 	adc #$10
     sta window_counter
-ShowWinnerWindowAttrDone:
+showWinnerWindowAttrDone:
 
 
-ShowWinner:
+showWinner:
     lda #$23
     sta $2006
     lda #$10
     sta $2006
     lda player2_life
-    bne Player2Win
-Player1Win:
+    bne .player2Win
+.player1Win:
     lda #$1A
     sta $2007
-    jmp ShowWinnerDone
-Player2Win:
+    jmp .done
+.player2Win:
     lda #$1B
     sta $2007
-ShowWinnerDone:
+.done:
 
 
     lda #$00
@@ -121,55 +121,54 @@ ShowWinnerDone:
     sta $2005
     sta $2005
 
-Player1StelthDecOver:
+player1StelthDecOver:
     lda #$00
     sta player1_sword_state
     lda player1_stelth
-    beq Player1StelthDecOverDone
+    beq .done
     lda player1_stelth
     lsr a
     sta player1_sword_state
     dec player1_stelth
-Player1StelthDecOverDone:
-Player2StelthDecOver:
+.done:
+player2StelthDecOver:
     lda #$00
     sta player2_sword_state
     lda player2_stelth
-    beq Player2StelthDecOverDone
+    beq .done
     lda player2_stelth
     lsr a
     sta player2_sword_state
     dec player2_stelth
-Player2StelthDecOverDone:
+.done:
 
-Player1SpriteUpdateOver:
+player1SpriteUpdateOver:
     lda player1_spr
     sta PLAYER1_SPR
     lda player1_sword_spr
     clc
 	adc player1_sword_state
     sta PLAYER1_SWORD_SPR
-Player1SpriteUpdateOverDone:
-Player2SpriteUpdateOver:
+player2SpriteUpdateOver:
     lda player2_spr
     sta PLAYER2_SPR
     lda player2_sword_spr
     clc
 	adc player2_sword_state
     sta PLAYER2_SWORD_SPR
-Player2SpriteUpdateOverDone:
+
 
     lda window_counter
     cmp #$A0
-    bne NotRestart
+    bne .notRestart
 
     lda conroller1
     eor conroller1pre
     and conroller1
     cmp #$10
-    bne NotRestart
-Restart:
+    bne .notRestart
+.restart:
     jmp RESET
-NotRestart:
+.notRestart:
 
     rts

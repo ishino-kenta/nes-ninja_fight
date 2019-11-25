@@ -10,8 +10,6 @@ player1Controll:
     lda conroller1
     and #BUTTON_RIGHT
     beq .1
-    lda player1_move_flag
-    bne .1
     jsr .right
 .1:
     lda conroller1
@@ -55,49 +53,25 @@ player1Controll:
     sta item_counter+1
 .done:
     rts
+
 .down:
     lda #$00
-    sta tmp3
-.12:
+    sta tmp3    ; speed counter
     lda #DIRECTION_DOWN
     sta player1_spr
     lda #$50
     sta player1_sword_spr
-
-    lda player1_x
-    clc
-    adc #$00
-    tax
-    lda player1_y
-    clc
-    adc #$09
-    tay
-    jsr checkTile
-    cmp #FLOOR
-    bne .11
-    lda player1_x
-    clc
-    adc #$06
-    tax
-    lda player1_y
-    clc
-    adc #$09
-    tay
-    jsr checkTile
-    cmp #FLOOR
-    bne .11
-    inc player1_y
-    lda #TRUE
-    sta player1_move_flag
-
+.1a:
+    jsr .1sr
+    ; speed loop.
     lda tmp3
     clc
     adc #$01
     sta tmp3
     lda tmp3
     cmp player1_speed
-    bne .12
-.11:
+    bne .1a
+    ; set sword position.
     lda player1_x
     sta player1_sword_x
     lda player1_y
@@ -105,49 +79,78 @@ player1Controll:
 	adc #$08
     sta player1_sword_y
     rts
+.1sr:
+    lda #$00
+    sta tmp4
+    ; check hitting the wall flag.
+    ldx #$00
+.1l:
+    lda player1_x
+    clc
+    adc .downTable, x
+    sta tmp
+    lda player1_y
+    clc
+    adc .downTable+2, x
+    sta tmp2
+    jsr checkTile
+    cmp #FLOOR
+    beq .1b
+    lda tmp4
+    ora .downTable+4, x
+    sta tmp4
+.1b:
+    inx
+    cpx #$02
+    bne .1l
+    ; move straight.
+    lda tmp4
+    and #$03
+    bne .1c
+    inc player1_y
+    lda #TRUE
+    sta player1_move_flag
+    jmp .1e
+.1c:
+    ; slide along the wall.
+    lda tmp4
+    and #$02
+    bne .1d
+    inc player1_x
+    lda #TRUE
+    sta player1_move_flag
+    jmp .1e
+.1d:
+    ; slide along the wall.
+    lda tmp4
+    and #$01
+    bne .1e
+    dec player1_x
+    lda #TRUE
+    sta player1_move_flag
+.1e:
+    rts
+.downTable:
+    .db $00,$06, $09,$09, $01,$02
+
 .right:
     lda #$00
-    sta tmp3
-.22:
+    sta tmp3    ; speed counter
     lda #DIRECTION_RIGHT
     sta player1_spr
     lda #$20
     sta player1_sword_spr
-
-    lda player1_x
-    clc
-    adc #$07
-    tax
-    lda player1_y
-    clc
-    adc #$01
-    tay
-    jsr checkTile
-    cmp #FLOOR
-    bne .21
-    lda player1_x
-    clc
-    adc #$07
-    tax
-    lda player1_y
-    clc
-    adc #$08
-    tay
-    jsr checkTile
-    cmp #FLOOR
-    bne .21
-    inc player1_x
-    lda #TRUE
-    sta player1_move_flag
-
+.2a:
+    jsr .2sr
+    ; speed loop.
     lda tmp3
     clc
     adc #$01
     sta tmp3
     lda tmp3
     cmp player1_speed
-    bne .22
-.21:
+    bne .2a
+    ; set sword position.
     lda player1_x
     clc
 	adc #$07
@@ -155,49 +158,81 @@ player1Controll:
     lda player1_y
     sta player1_sword_y
     rts
+.2sr:
+    lda #$00
+    sta tmp4
+    ; check hitting the wall flag.
+    ldx #$00
+.2l:
+    lda player1_x
+    clc
+    adc .rightTable, x
+    sta tmp
+    lda player1_y
+    clc
+    adc .rightTable+2, x
+    sta tmp2
+    jsr checkTile
+    cmp #FLOOR
+    beq .2b
+    lda tmp4
+    ora .rightTable+4, x
+    sta tmp4
+.2b:
+    inx
+    cpx #$02
+    bne .2l
+    ; move straight.
+    lda tmp4
+    and #$03
+    bne .2c
+    inc player1_x
+    lda #TRUE
+    sta player1_move_flag
+    jmp .2e
+.2c:
+    ; slide along the wall.
+    lda tmp4
+    and #$02
+    bne .2d
+    inc player1_y
+    lda #TRUE
+    sta player1_move_flag
+    jmp .2e
+.2d:
+    ; slide along the wall.
+    lda tmp4
+    and #$01
+    bne .2e
+    dec player1_y
+    lda #TRUE
+    sta player1_move_flag
+.2e:
+
+    ; increase item_counter_inc for random
+    inc item_counter_inc
+
+    rts
+.rightTable:
+    .db $07,$07, $01,$08, $01,$02
 .left:
     lda #$00
-    sta tmp3
-.32:
+    sta tmp3    ; speed counter
     lda #DIRECTION_LEFT
     sta player1_spr
     lda #$30
     sta player1_sword_spr
-
-    lda player1_x
-    clc
-    adc #$FF
-    tax
-    lda player1_y
-    clc
-    adc #$01
-    tay
-    jsr checkTile
-    cmp #FLOOR
-    bne .31
-    lda player1_x
-    clc
-    adc #$FF
-    tax
-    lda player1_y
-    clc
-    adc #$08
-    tay
-    jsr checkTile
-    cmp #FLOOR
-    bne .31
-    dec player1_x
-    lda #TRUE
-    sta player1_move_flag
-
+.3a:
+    jsr .3sr
+    ; speed loop.
     lda tmp3
     clc
     adc #$01
     sta tmp3
     lda tmp3
     cmp player1_speed
-    bne .32
-.31:
+    bne .3a
+    ; set sword position.
     lda player1_x
     sec
 	sbc #$08
@@ -205,56 +240,138 @@ player1Controll:
     lda player1_y
     sta player1_sword_y
     rts
+.3sr:
+    lda #$00
+    sta tmp4
+    ; check hitting the wall flag.
+    ldx #$00
+.3l:
+    lda player1_x
+    clc
+    adc .leftTable, x
+    sta tmp
+    lda player1_y
+    clc
+    adc .leftTable+2, x
+    sta tmp2
+    jsr checkTile
+    cmp #FLOOR
+    beq .3b
+    lda tmp4
+    ora .leftTable+4, x
+    sta tmp4
+.3b:
+    inx
+    cpx #$02
+    bne .3l
+    ; move straight.
+    lda tmp4
+    and #$03
+    bne .3c
+    dec player1_x
+    lda #TRUE
+    sta player1_move_flag
+    jmp .3e
+.3c:
+    ; slide along the wall.
+    lda tmp4
+    and #$02
+    bne .3d
+    inc player1_y
+    lda #TRUE
+    sta player1_move_flag
+    jmp .3e
+.3d:
+    ; slide along the wall.
+    lda tmp4
+    and #$01
+    bne .3e
+    dec player1_y
+    lda #TRUE
+    sta player1_move_flag
+.3e:
+    rts
+.leftTable:
+    .db $FF,$FF, $01,$08, $01,$02
+
 .up:
     lda #$00
-    sta tmp3
-.42:
+    sta tmp3    ; speed counter
     lda #DIRECTION_UP
     sta player1_spr
     lda #$40
     sta player1_sword_spr
-
-    lda player1_x
-    clc
-    adc #$00
-    tax
-    lda player1_y
-    clc
-    adc #$00
-    tay
-    jsr checkTile
-    cmp #FLOOR
-    bne .41
-    lda player1_x
-    clc
-    adc #$06
-    tax
-    lda player1_y
-    clc
-    adc #$00
-    tay
-    jsr checkTile
-    cmp #FLOOR
-    bne .41
-    dec player1_y
-    lda #TRUE
-    sta player1_move_flag
-
+.4a:
+    jsr .4sr
+    ; speed loop.
     lda tmp3
     clc
     adc #$01
     sta tmp3
     lda tmp3
     cmp player1_speed
-    bne .42
-.41:
+    bne .4a
+    ; set sword position.
     lda player1_x
     sta player1_sword_x
     lda player1_y
-    sec
-	sbc #$08
+    clc
+	sbc #$07
     sta player1_sword_y
     rts
+.4sr:
+    lda #$00
+    sta tmp4
+    ; check hitting the wall flag.
+    ldx #$00
+.4l:
+    lda player1_x
+    clc
+    adc .upTable, x
+    sta tmp
+    lda player1_y
+    clc
+    adc .upTable+2, x
+    sta tmp2
+    jsr checkTile
+    cmp #FLOOR
+    beq .4b
+    lda tmp4
+    ora .upTable+4, x
+    sta tmp4
+.4b:
+    inx
+    cpx #$02
+    bne .4l
+    ; move straight.
+    lda tmp4
+    and #$03
+    bne .4c
+    dec player1_y
+    lda #TRUE
+    sta player1_move_flag
+    jmp .4e
+.4c:
+    ; slide along the wall.
+    lda tmp4
+    and #$02
+    bne .4d
+    inc player1_x
+    lda #TRUE
+    sta player1_move_flag
+    jmp .4e
+.4d:
+    ; slide along the wall.
+    lda tmp4
+    and #$01
+    bne .4e
+    dec player1_x
+    lda #TRUE
+    sta player1_move_flag
+.4e:
+    rts
+.upTable:
+    .db $00,$06, $01,$01, $01,$02
 .A:
     lda #$0F
     sta player1_atacking_timer
@@ -273,7 +390,6 @@ player1Controll:
     sta $4003
 
     rts
-
 
 player2Controll:
     lda #FALSE
@@ -342,22 +458,22 @@ player2Controll:
     lda player2_x
     clc
     adc #$00
-    tax
+    sta tmp
     lda player2_y
     clc
     adc #$09
-    tay
+    sta tmp2
     jsr checkTile
     cmp #FLOOR
     bne .11
     lda player2_x
     clc
     adc #$06
-    tax
+    sta tmp
     lda player2_y
     clc
     adc #$09
-    tay
+    sta tmp2
     jsr checkTile
     cmp #FLOOR
     bne .11
@@ -392,22 +508,22 @@ player2Controll:
     lda player2_x
     clc
     adc #$07
-    tax
+    sta tmp
     lda player2_y
     clc
     adc #$01
-    tay
+    sta tmp2
     jsr checkTile
     cmp #FLOOR
     bne .21
     lda player2_x
     clc
     adc #$07
-    tax
+    sta tmp
     lda player2_y
     clc
     adc #$08
-    tay
+    sta tmp2
     jsr checkTile
     cmp #FLOOR
     bne .21
@@ -442,22 +558,22 @@ player2Controll:
     lda player2_x
     clc
     adc #$FF
-    tax
+    sta tmp
     lda player2_y
     clc
     adc #$01
-    tay
+    sta tmp2
     jsr checkTile
     cmp #FLOOR
     bne .31
     lda player2_x
     clc
     adc #$FF
-    tax
+    sta tmp
     lda player2_y
     clc
     adc #$08
-    tay
+    sta tmp2
     jsr checkTile
     cmp #FLOOR
     bne .31
@@ -492,22 +608,22 @@ player2Controll:
     lda player2_x
     clc
     adc #$00
-    tax
+    sta tmp
     lda player2_y
     clc
     adc #$00
-    tay
+    sta tmp2
     jsr checkTile
     cmp #FLOOR
     bne .41
     lda player2_x
     clc
     adc #$06
-    tax
+    sta tmp
     lda player2_y
     clc
     adc #$00
-    tay
+    sta tmp2
     jsr checkTile
     cmp #FLOOR
     bne .41

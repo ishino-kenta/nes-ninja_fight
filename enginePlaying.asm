@@ -38,7 +38,7 @@ enginePlaying:
 .2:
 
 player1LifeDec:
-    lda #PLAYER1_LIFE_LOW    ; player1
+    lda #PLAYER1_LIFE_LOW
     sta $2006
     lda #PLAYER1_LIFE_HIGH
     clc
@@ -47,7 +47,7 @@ player1LifeDec:
     lda #$00
     sta $2007
 player2LifeDec:
-    lda #PLAYER2_LIFE_LOW   ; player2
+    lda #PLAYER2_LIFE_LOW
     sta $2006
     lda #PLAYER2_LIFE_HIGH
     clc
@@ -103,17 +103,17 @@ player1AatckingDec:
     jsr player2Controll
 
 player2AatckingDec:
-    lda player2_atacking_timer
     beq .1
     dec player2_atacking_timer
 .1:
     lda player2_atacking_timer
     lsr a
     sta player2_sword_state
+    lda player2_atacking_timer
 .done:
 
 
-Player1SwordHit:
+player1SwordHit:
     lda player1_atacking_timer
     beq .label1
     lda player1_sword_x
@@ -145,12 +145,12 @@ Player1SwordHit:
     cmp tmp   ; p1sy < p2y+p2h
     bcs .label1
     lda player1_sword_hit
-    bne Player1SwordHitDone
+    bne .done
     lda #$01
     sta player1_sword_hit
     dec player2_life
 
-.Player2Damage:
+.player2Damage:
     lda #%00001000
     sta $4015
     lda #%11000001
@@ -159,16 +159,15 @@ Player1SwordHit:
     sta $400E
     lda #%00010011
     sta $400F
-.Player2DamageDone:
 
-    jmp Player1SwordHitDone
+    jmp .done
 .label1:
 
     lda #$00
     sta player1_sword_hit
-Player1SwordHitDone:
+.done:
 
-Player2SwordHit:
+player2SwordHit:
     lda player2_atacking_timer
     beq .label1
     lda player2_sword_x
@@ -200,12 +199,12 @@ Player2SwordHit:
     cmp tmp   ; p1sy < p2y+p2h
     bcs .label1
     lda player2_sword_hit
-    bne Player2SwordHitDone
+    bne .done
     lda #$01
     sta player2_sword_hit
     dec player1_life
 
-.Player1Damage:
+.player1Damage:
     lda #%00001000
     sta $4015
     lda #%11000001
@@ -214,15 +213,15 @@ Player2SwordHit:
     sta $400E
     lda #%00010011
     sta $400F
-.Player1DamageDone:
+.player1DamageDone:
 
-    jmp Player2SwordHitDone
+    jmp .done
 .label1:
     lda #$00
     sta player2_sword_hit
-Player2SwordHitDone:
+.done:
 
-Player1SpriteUpdate:
+player1SpriteUpdate:
 
     lda player1_atacking_timer
     beq .1
@@ -258,7 +257,7 @@ Player1SpriteUpdate:
     lda player1_sword_x
     sta PLAYER1_SWORD_X
 
-Player2SpriteUpdate:
+player2SpriteUpdate:
     lda player2_atacking_timer
     beq .1
     lda #TRUE
@@ -293,25 +292,22 @@ Player2SpriteUpdate:
     lda player2_sword_x
     sta PLAYER2_SWORD_X
 
-Player1Dead:
+playerDeadCheck:
+    ; player1
     lda player1_life
-    bne Plater1DeadDone
-    jmp GameOverInit
-Plater1DeadDone:
-Player2Dead:
+    beq .gameOverInit
+    ; player2
     lda player2_life
-    bne GameOverInitDone
-    jmp GameOverInit
-Plater2DeadDone:
-GameOverInit:
+    beq .gameOverInit
+    jmp .done
+.gameOverInit:
     lda #STATE_OVER
     sta game_state
     lda #0
     sta window_counter
-GameOverInitDone:
+.done:
 
-CheckItemCounter:
-
+checkItemCounter:
     lda item_counter+1
     cmp #$FF
     bne .1
@@ -321,30 +317,24 @@ CheckItemCounter:
 
     lda #FALSE
     sta item_flag
-
+    ; generate random item position.
     lda general_counter
-    eor player1_y
-    eor player2_x
-    and #$F8
-    cmp #$D8
-    bcs .1
-    clc
-    adc #$10
+    and #$1F
+    tax
+    lda randomItemXTable, x
     sta item_x
 
     lda general_counter
-    eor player1_x
-    eor player2_y
-    and #$F8
-    cmp #$80
-    bcs .1
-    clc
-    adc #$17
+    and #$1F
+    tax
+    lda randomItemYTable, x
     sta item_y
+    dec item_y
 
-    ldx item_x
-    ldy item_y
-    iny
+    lda item_x
+    sta tmp
+    lda item_y
+    sta tmp2
     jsr checkTile
     sta test
     cmp #FLOOR
@@ -395,3 +385,24 @@ ShowItem:
 
 
     rts
+
+
+randomItemXTable:
+    .db $C0,$10,$58,$28,$18,$A0,$38,$98
+    .db $78,$c0,$98,$70,$D0,$80,$78,$68
+    .db $18,$88,$50,$B8,$98,$90,$E0,$38
+    .db $C8,$D8,$98,$40,$80,$70,$58,$28
+    .db $E0,$C0,$C8,$88,$C0,$30,$28,$C0
+    .db $40,$B0,$80,$58,$E0,$68,$70,$D8
+    .db $E0,$30,$C8,$50,$88,$88,$80,$A8
+    .db $A0,$68,$78,$78,$C8,$48,$A8,$30
+
+randomItemYTable:
+    .db $60,$50,$50,$28,$30,$18,$78,$20
+    .db $68,$70,$80,$70,$68,$70,$38,$28
+    .db $78,$50,$38,$78,$78,$78,$20,$40
+    .db $88,$90,$68,$28,$30,$40,$60,$88
+    .db $28,$50,$58,$28,$20,$30,$50,$20
+    .db $40,$90,$30,$88,$68,$88,$60,$80
+    .db $40,$80,$88,$30,$60,$80,$50,$30
+    .db $38,$80,$40,$68,$70,$20,$68,$28

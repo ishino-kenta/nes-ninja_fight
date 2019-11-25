@@ -36,15 +36,13 @@ readController2:
 
 ;--------------------------------------------------
 ;in
-; X: offset x
-; Y: offset y
+; tmp: offset x
+; tmp2: offset y
 ;out
 ; A: tile number
 ;memory
 ; tmp, tmp2
 checkTile:
-    stx tmp
-    sty tmp2
     
     lda #LOW(playingNametable)
     sta source_addr_low
@@ -64,6 +62,7 @@ checkTile:
 
     lda #$00
     sta tmp
+    inc tmp2
     lda tmp2
     and #$F8
     asl a
