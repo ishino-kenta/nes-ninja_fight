@@ -1,4 +1,4 @@
-engineOver:
+EngineOver:
 
 showWinnerWindow:
     lda window_counter
@@ -162,9 +162,9 @@ player2SpriteUpdateOver:
     cmp #$A0
     bne .notRestart
 
-    lda conroller1
-    eor conroller1pre
-    and conroller1
+    lda controller1
+    eor controller1pre
+    and controller1
     cmp #$10
     bne .notRestart
 .restart:

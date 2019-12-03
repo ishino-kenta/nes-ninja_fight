@@ -1,22 +1,86 @@
-FLOOR = $02
-enginePlaying:
 
-    lda walk_counter
+EnginePlaying:
+
+player1StatusDraw:
+    ; life
+    lda #PLAYER1_LIFE_HIGH
+    sta $2006
+    lda #PLAYER1_LIFE_LOW
     clc
-    adc #$01
-    cmp #$03
+	adc player1_life
+    sec
+    sbc #$01
+    sta $2006
+    lda #$05
+    sta $2007
+    lda #$00
+    sta $2007
+    ; sword
+    lda #PLAYER1_SWORD_HIGH
+    sta $2006
+    lda #PLAYER1_SWORD_LOW
+    clc
+	adc player1_sword
+    sec
+    sbc #$01
+    sta $2006
+    lda #$22
+    ldx player1_sword
     bne .1
     lda #$00
 .1:
-    sta walk_counter
+    sta $2007
+    lda #$00
+    sta $2007
+player2StatusDraw:
+    ; life
+    lda #PLAYER2_LIFE_HIGH
+    sta $2006
+    lda #PLAYER2_LIFE_LOW
+    clc
+	adc player2_life
+    sec
+    sbc #$01
+    sta $2006
+    lda #$05
+    sta $2007
+    lda #$00
+    sta $2007
+    ; sword
+    lda #PLAYER2_SWORD_HIGH
+    sta $2006
+    lda #PLAYER2_SWORD_LOW
+    clc
+	adc player2_sword
+    sec
+    sbc #$01
+    sta $2006
+    lda #$22
+    ldx player2_sword
+    bne .1
+    lda #$00
+.1:
+    sta $2007
+    lda #$00
+    sta $2007
 
+counters:
+    ; speed
     lda player1_speed_level
+    sta test
     asl a
     asl a
+    clc
+    adc player1_speed_level
+    clc
     adc walk_counter
     tax
     lda walkSpeed, x
     sta player1_speed
+    sta test2
+    
+    lda walk_counter
+    sta test3
 
     lda player2_speed_level
     asl a
@@ -26,6 +90,16 @@ enginePlaying:
     lda walkSpeed, x
     sta player2_speed
 
+    inc walk_counter
+    lda walk_counter
+    cmp #$05
+    bne .1
+    lda #$00
+    sta walk_counter
+.1:
+
+
+    ; item
     lda item_flag
     bne .2
     lda item_counter
@@ -37,24 +111,30 @@ enginePlaying:
     sta item_counter+1
 .2:
 
-player1LifeDec:
-    lda #PLAYER1_LIFE_LOW
-    sta $2006
-    lda #PLAYER1_LIFE_HIGH
-    clc
-	adc player1_life
-    sta $2006
-    lda #$00
-    sta $2007
-player2LifeDec:
-    lda #PLAYER2_LIFE_LOW
-    sta $2006
-    lda #PLAYER2_LIFE_HIGH
-    clc
-	adc player2_life
-    sta $2006
-    lda #$00
-    sta $2007
+    ; sword
+    lda player1_sword
+    cmp #$04
+    beq .3
+    dec player1_sword_counter
+    lda player1_sword_counter
+    cmp #$00
+    bne .3
+    inc player1_sword
+    lda #$50
+    sta player1_sword_counter
+.3:
+
+    lda player2_sword
+    cmp #$04
+    beq .4
+    dec player2_sword_counter
+    lda player2_sword_counter
+    cmp #$00
+    bne .4
+    inc player2_sword
+    lda #$50
+    sta player2_sword_counter
+.4:
 
 
     lda #$00
@@ -70,15 +150,6 @@ player2LifeDec:
     sta $2005
     sta $2005
 
-    lda #BUTTON_DOWN + BUTTON_LEFT + BUTTON_RIGHT + BUTTON_UP
-    and #$0F
-    bne .1
-    lda player1_x
-    sta player1_sword_x
-    lda player1_y
-    sta player1_sword_y
-.1:
-
     jsr player1Controll
     
 player1AatckingDec:
@@ -91,152 +162,34 @@ player1AatckingDec:
     sta player1_sword_state
 .done:
 
-
-    lda #BUTTON_DOWN + BUTTON_LEFT + BUTTON_RIGHT + BUTTON_UP
-    and #$0F
-    bne .2
-    lda player2_x
-    sta player2_sword_x
-    lda player2_y
-    sta player2_sword_y
-.2:
     jsr player2Controll
 
 player2AatckingDec:
+    lda player2_atacking_timer
     beq .1
     dec player2_atacking_timer
 .1:
     lda player2_atacking_timer
     lsr a
     sta player2_sword_state
-    lda player2_atacking_timer
 .done:
 
 
-player1SwordHit:
-    lda player1_atacking_timer
-    beq .label1
-    lda player1_sword_x
-    clc
-	adc #PLAYER1_SWORD_WIDTH
-    sta tmp
-    lda player2_x
-    cmp tmp ; p2x < p1sx+p1sw
-    bcs .label1
-    lda player2_x
-    clc
-	adc #PLAYER2_WIDTH
-    sta tmp
-    lda player1_sword_x
-    cmp tmp   ; p1sx < p2x+p2w
-    bcs .label1
-    lda player1_sword_y
-    clc
-	adc #PLAYER1_SWORD_HEIGHT
-    sta tmp
-    lda player2_y
-    cmp tmp ; p2y < p1sy+p1sh
-    bcs .label1
-    lda player2_y
-    clc
-	adc #PLAYER2_HEIGHT
-    sta tmp
-    lda player1_sword_y
-    cmp tmp   ; p1sy < p2y+p2h
-    bcs .label1
-    lda player1_sword_hit
-    bne .done
-    lda #$01
-    sta player1_sword_hit
-    dec player2_life
+    jsr player1SwordHit
 
-.player2Damage:
-    lda #%00001000
-    sta $4015
-    lda #%11000001
-    sta $400C
-    lda #%00001100
-    sta $400E
-    lda #%00010011
-    sta $400F
+    jsr player2SwordHit
 
-    jmp .done
-.label1:
-
-    lda #$00
-    sta player1_sword_hit
-.done:
-
-player2SwordHit:
-    lda player2_atacking_timer
-    beq .label1
-    lda player2_sword_x
-    clc
-	adc #PLAYER2_SWORD_WIDTH
-    sta tmp
-    lda player1_x
-    cmp tmp ; p1x < p2sx+p2sw
-    bcs .label1
-    lda player1_x
-    clc
-	adc #PLAYER1_WIDTH
-    sta tmp
-    lda player2_sword_x
-    cmp tmp   ; p1sx < p2x+p2w
-    bcs .label1
-    lda player2_sword_y
-    clc
-	adc #PLAYER2_SWORD_HEIGHT
-    sta tmp
-    lda player1_y
-    cmp tmp ; p1y < p2sy+p2sh
-    bcs .label1
-    lda player1_y
-    clc
-	adc #PLAYER1_HEIGHT
-    sta tmp
-    lda player2_sword_y
-    cmp tmp   ; p1sy < p2y+p2h
-    bcs .label1
-    lda player2_sword_hit
-    bne .done
-    lda #$01
-    sta player2_sword_hit
-    dec player1_life
-
-.player1Damage:
-    lda #%00001000
-    sta $4015
-    lda #%11000001
-    sta $400C
-    lda #%00000100
-    sta $400E
-    lda #%00010011
-    sta $400F
-.player1DamageDone:
-
-    jmp .done
-.label1:
-    lda #$00
-    sta player2_sword_hit
-.done:
 
 player1SpriteUpdate:
-
-    lda player1_atacking_timer
-    beq .1
-    lda #TRUE
-    jmp .2
-.1:
-    lda #FALSE
-.2:
-    sta player1_stelth
 
     lda player1_y
     sta PLAYER1_Y
     lda player1_sword_y
     sta PLAYER1_SWORD_Y
     lda player1_stelth
+    bne .label1
+
+    lda player1_atacking_timer
     bne .label1
 
     lda #$0F
@@ -258,20 +211,15 @@ player1SpriteUpdate:
     sta PLAYER1_SWORD_X
 
 player2SpriteUpdate:
-    lda player2_atacking_timer
-    beq .1
-    lda #TRUE
-    jmp .2
-.1:
-    lda #FALSE
-.2:
-    sta player2_stelth
 
     lda player2_y
     sta PLAYER2_Y
     lda player2_sword_y
     sta PLAYER2_SWORD_Y
     lda player2_stelth
+    bne .label1
+
+    lda player2_atacking_timer
     bne .label1
 
     lda #$0F
@@ -319,15 +267,15 @@ checkItemCounter:
     sta item_flag
     ; generate random item position.
     lda general_counter
-    and #$1F
+    and #$3F
     tax
-    lda randomItemXTable, x
+    lda randomXTable, x
     sta item_x
 
     lda general_counter
-    and #$1F
+    and #$3F
     tax
-    lda randomItemYTable, x
+    lda randomYTable, x
     sta item_y
     dec item_y
 
@@ -336,7 +284,6 @@ checkItemCounter:
     lda item_y
     sta tmp2
     jsr checkTile
-    sta test
     cmp #FLOOR
     bne .1
 
@@ -387,9 +334,9 @@ ShowItem:
     rts
 
 
-randomItemXTable:
+randomXTable:
     .db $C0,$10,$58,$28,$18,$A0,$38,$98
-    .db $78,$c0,$98,$70,$D0,$80,$78,$68
+    .db $78,$C0,$98,$70,$D0,$80,$78,$68
     .db $18,$88,$50,$B8,$98,$90,$E0,$38
     .db $C8,$D8,$98,$40,$80,$70,$58,$28
     .db $E0,$C0,$C8,$88,$C0,$30,$28,$C0
@@ -397,7 +344,7 @@ randomItemXTable:
     .db $E0,$30,$C8,$50,$88,$88,$80,$A8
     .db $A0,$68,$78,$78,$C8,$48,$A8,$30
 
-randomItemYTable:
+randomYTable:
     .db $60,$50,$50,$28,$30,$18,$78,$20
     .db $68,$70,$80,$70,$68,$70,$38,$28
     .db $78,$50,$38,$78,$78,$78,$20,$40

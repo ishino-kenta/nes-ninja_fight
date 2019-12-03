@@ -29,7 +29,7 @@ speedUpper:
     sta source_addr_high
     ldy #$00
     lda [source_addr_low], y
-    cmp #$08
+    cmp #$0A
     beq .1
     clc
     adc #$01

@@ -1,7 +1,7 @@
 
-readController1:
-    lda conroller1
-    sta conroller1pre
+ReadController1:
+    lda controller1
+    sta controller1pre
     lda #$01
     sta $4016
     lda #$00
@@ -10,16 +10,16 @@ readController1:
 .ReadController1Loop:
     lda $4016
     lsr a
-    rol conroller1
+    rol controller1
     dex
     bne .ReadController1Loop
 
     rts
 
 
-readController2:
-    lda conroller2
-    sta conroller2pre
+ReadController2:
+    lda controller2
+    sta controller2pre
     lda #$01
     sta $4017
     lda #$00
@@ -28,7 +28,7 @@ readController2:
 .ReadController2Loop:
     lda $4017
     lsr a
-    rol conroller2
+    rol controller2
     dex
     bne .ReadController2Loop
 

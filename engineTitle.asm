@@ -1,8 +1,8 @@
-engineTitle:
+EngineTitle:
 
-    lda conroller1
-    eor conroller1pre
-    and conroller1
+    lda controller1
+    eor controller1pre
+    and controller1
     cmp #BUTTON_START
     bne .notStart
     jsr loadPlaying
@@ -54,9 +54,9 @@ loadPlaying:
 
 
     lda $2002   ; life player1
-    lda #PLAYER1_LIFE_LOW
-    sta $2006
     lda #PLAYER1_LIFE_HIGH
+    sta $2006
+    lda #PLAYER1_LIFE_LOW
     sta $2006
     lda #$05
     ldx #0
@@ -66,19 +66,45 @@ loadPlaying:
     cpx #LIFE_INIT
     bne .loop3
 
-    lda $2002   ; life player2
-    lda #PLAYER2_LIFE_LOW
+    lda $2002   ; sword player1
+    lda #PLAYER1_SWORD_HIGH
     sta $2006
+    lda #PLAYER1_SWORD_LOW
+    sta $2006
+    lda #$22
+    ldx #0
+.loop5:
+    sta $2007
+    inx
+    cpx #LIFE_INIT
+    bne .loop5
+
+    lda $2002   ; life player2
     lda #PLAYER2_LIFE_HIGH
     sta $2006
-
+    lda #PLAYER2_LIFE_LOW
+    sta $2006
     lda #$05
     ldx #0
 .loop4:
     sta $2007
     inx
-    cpx #LIFE_INIT
+    cpx #SWORD_MAX
     bne .loop4
+
+    lda $2002   ; sword player2
+    lda #PLAYER2_SWORD_HIGH
+    sta $2006
+    lda #PLAYER2_SWORD_LOW
+    sta $2006
+    lda #$22
+    ldx #0
+.loop6:
+    sta $2007
+    inx
+    cpx #SWORD_MAX
+    bne .loop6
+
 
 playingAttrs:
     lda $2002
@@ -140,6 +166,10 @@ loadPlayingCont:
     sta player1_life
     sta player2_life
 
+    lda #SWORD_MAX
+    sta player1_sword
+    sta player2_sword
+
     lda general_counter
     and #$7F
     ora #$A0
@@ -148,5 +178,69 @@ loadPlayingCont:
     lda #$00
     sta player1_speed_level
     sta player2_speed_level
+
+    lda #$50
+    sta player1_sword_counter
+    sta player2_sword_counter
+
+    lda #$00
+    sta tmp3
+.1:
+    lda tmp3
+    adc general_counter
+    sta tmp3
+    and #$3F
+    tax
+    lda randomXTable, x
+    sta player1_x
+    sta player1_sword_x
+
+    lda tmp3
+    and #$3F
+    tax
+    lda randomYTable, x
+    sta player1_y
+    sta player1_sword_y
+    dec player1_y
+    dec player1_sword_y
+
+    lda player1_x
+    sta tmp
+    lda player1_y
+    sta tmp2
+    jsr checkTile
+    cmp #FLOOR
+    bne .1
+
+    lda tmp3
+    adc general_counter
+    sta tmp3
+.2:
+    lda tmp3
+    adc general_counter
+    sta tmp3
+    and #$3F
+    tax
+    lda randomXTable, x
+    sta player1_x
+    sta player1_sword_x
+
+    lda tmp3
+    and #$3F
+    tax
+    lda randomYTable, x
+    sta player1_y
+    sta player1_sword_y
+    dec player1_y
+    dec player1_sword_y
+
+    lda player1_x
+    sta tmp
+    lda player1_y
+    sta tmp2
+    jsr checkTile
+    cmp #FLOOR
+    bne .2
+
 
     rts

@@ -66,12 +66,21 @@ ITEM_SPR = $0211
 ITEM_ATTR = $0212
 ITEM_X = $0213
 
-PLAYER1_LIFE_LOW = $22
-PLAYER1_LIFE_HIGH = $E8
-PLAYER2_LIFE_LOW = $22
-PLAYER2_LIFE_HIGH = $F8
+PLAYER1_LIFE_HIGH = $22
+PLAYER1_LIFE_LOW = $E8
+PLAYER1_SWORD_HIGH = $23
+PLAYER1_SWORD_LOW = $08
+PLAYER2_LIFE_HIGH = $22
+PLAYER2_LIFE_LOW = $F8
+PLAYER2_SWORD_HIGH = $23
+PLAYER2_SWORD_LOW = $18
 
-LIFE_INIT = $04
+
+LIFE_INIT = $03
+
+SWORD_MAX = $04
+
+FLOOR = $02
 
 
 ;Declare some macros here
@@ -86,10 +95,10 @@ test2   .rs 1
 test3   .rs 1
 test4   .rs 1
 
-conroller1    .rs 1
-conroller1pre .rs 1
-conroller2    .rs 1
-conroller2pre .rs 1
+controller1    .rs 1
+controller1pre .rs 1
+controller2    .rs 1
+controller2pre .rs 1
 
 game_state  .rs 1
 
@@ -148,17 +157,28 @@ item_counter    .rs 2
 item_counter_inc    .rs 1
 
 
+
+
+player1_sword   .rs 1
+player2_sword   .rs 1
+
+player1_sword_counter   .rs 1
+player2_sword_counter   .rs 1
+
+
+
+
 ;Initial settings
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     .bank 0
     .org $C000
-main:
+Main:
 
-vWait1:
+VWait1:
     bit $2002
-    bpl vWait1
+    bpl VWait1
 
-loadPalettes:
+LoadPalettes:
     lda $2002   ; reset high/low latch
     lda #$3F
     sta $2006
@@ -172,11 +192,11 @@ loadPalettes:
     cpx #$20
     bne .loop
 
-vWait2:
+VWait2:
     bit $2002
-    bpl vWait2
+    bpl VWait2
 
-titleNametables:
+TitleNametables:
     lda $2002
     lda #$20
     sta $2006
@@ -210,7 +230,7 @@ titleNametables:
     cpx #$1E
     bne .loop
 
-titleAttrs:
+TitleAttrs:
     lda $2002
     lda #$23
     sta $2006
@@ -235,8 +255,8 @@ titleAttrs:
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
     lda #$FF
-    sta conroller1
-    sta conroller1pre
+    sta controller1
+    sta controller1pre
 
     lda #STATE_TITLE
     sta game_state
@@ -257,8 +277,8 @@ titleAttrs:
 
     cli ; enable IRQ
 
-forever:
-    jmp forever
+Forever:
+    jmp Forever
 
 ;Main Loop
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -272,43 +292,43 @@ NMI:
     sta $2005
     sta $2005
 
-    jsr readController1
-    jsr readController2
+    jsr ReadController1
+    jsr ReadController2
 
     inc general_counter
 
-gameEngine:
+GameEngine:
 .title:
     lda game_state
     cmp #STATE_TITLE
     bne .playing
-    jsr engineTitle
+    jsr EngineTitle
     jmp .done
 .playing:
     lda game_state
     cmp #STATE_PLAYING
     bne .over
-    jsr enginePlaying
+    jsr EnginePlaying
 .over:
     lda game_state
     cmp #STATE_OVER
     bne .done
-    jsr engineOver
+    jsr EngineOver
 .done:
 
     rti
 
 ;Title scene
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    .include "engineTitle.asm"
+    .include "EngineTitle.asm"
 
 ;Playing scene
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    .include "enginePlaying.asm"
+    .include "EnginePlaying.asm"
 
 ;Over scene
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    .include "engineOver.asm"
+    .include "EngineOver.asm"
 
 ;IRQ
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -317,8 +337,8 @@ IRQ:
     rti
 
 
-    .include "subroutine.asm"
-    .include "subroutinePlaying.asm"
+    .include "Subroutine.asm"
+    .include "SubroutinePlaying.asm"
 
 ;Some datas
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -394,7 +414,7 @@ initBank:
     cpx #8
     bne .initBankLoop
 
-    jmp main
+    jmp Main
 
 initBankTable:
     .db $00,$02,$04,$05,$06,$07,$00,$00
