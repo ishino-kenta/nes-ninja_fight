@@ -111,7 +111,7 @@ showWinner:
     lda #$00
     sta $2003
     lda #$02
-    sta $4014; sprite DMA
+    sta $4014 ; sprite DMA
 
     lda #%10010000  ; PPU clean up
     sta $2000
@@ -121,42 +121,8 @@ showWinner:
     sta $2005
     sta $2005
 
-player1StelthDecOver:
-    lda #$00
-    sta player1_sword_state
-    lda player1_stelth
-    beq .done
-    lda player1_stelth
-    lsr a
-    sta player1_sword_state
-    dec player1_stelth
-.done:
-player2StelthDecOver:
-    lda #$00
-    sta player2_sword_state
-    lda player2_stelth
-    beq .done
-    lda player2_stelth
-    lsr a
-    sta player2_sword_state
-    dec player2_stelth
-.done:
-
-player1SpriteUpdateOver:
-    lda player1_spr
-    sta PLAYER1_SPR
-    lda player1_sword_spr
-    clc
-	adc player1_sword_state
-    sta PLAYER1_SWORD_SPR
-player2SpriteUpdateOver:
-    lda player2_spr
-    sta PLAYER2_SPR
-    lda player2_sword_spr
-    clc
-	adc player2_sword_state
-    sta PLAYER2_SWORD_SPR
-
+    jsr ReadController1
+    jsr ReadController2
 
     lda window_counter
     cmp #$A0

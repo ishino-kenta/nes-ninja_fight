@@ -1,15 +1,18 @@
 EngineTitle:
 
+    jsr ReadController1
+    jsr ReadController2
+
     lda controller1
     eor controller1pre
     and controller1
     cmp #BUTTON_START
     bne .notStart
-    jsr loadPlaying
+    jsr LoadPlaying
 .notStart:
     rts
 
-loadPlaying:
+LoadPlaying:
     lda #STATE_PLAYING
     sta game_state
 
@@ -17,6 +20,10 @@ loadPlaying:
     sta $2000
     lda #%00000000  ; disable spr/BG
     sta $2001
+
+.vw1:
+    lda $2002
+    bpl .vw1
 
 .setNametables:
     lda $2002
@@ -52,8 +59,8 @@ loadPlaying:
     cpx #$1E
     bne .loop
 
-
-    lda $2002   ; life player1
+    ; draw life player1
+    lda $2002
     lda #PLAYER1_LIFE_HIGH
     sta $2006
     lda #PLAYER1_LIFE_LOW
@@ -65,8 +72,8 @@ loadPlaying:
     inx
     cpx #LIFE_INIT
     bne .loop3
-
-    lda $2002   ; sword player1
+    ; draw sword player1
+    lda $2002
     lda #PLAYER1_SWORD_HIGH
     sta $2006
     lda #PLAYER1_SWORD_LOW
@@ -76,10 +83,10 @@ loadPlaying:
 .loop5:
     sta $2007
     inx
-    cpx #LIFE_INIT
+    cpx #SWORD_MAX
     bne .loop5
-
-    lda $2002   ; life player2
+    ; draw life player2
+    lda $2002
     lda #PLAYER2_LIFE_HIGH
     sta $2006
     lda #PLAYER2_LIFE_LOW
@@ -89,10 +96,10 @@ loadPlaying:
 .loop4:
     sta $2007
     inx
-    cpx #SWORD_MAX
+    cpx #LIFE_INIT
     bne .loop4
-
-    lda $2002   ; sword player2
+    ; draw sword player2
+    lda $2002
     lda #PLAYER2_SWORD_HIGH
     sta $2006
     lda #PLAYER2_SWORD_LOW
@@ -105,8 +112,11 @@ loadPlaying:
     cpx #SWORD_MAX
     bne .loop6
 
+.vw2:
+    lda $2002
+    bpl .vw2
 
-playingAttrs:
+PlayingAttrs:
     lda $2002
     lda #$23
     sta $2006
@@ -126,41 +136,29 @@ playingAttrs:
     cpy #$40
     bne .loop
 
-loadPlayingCont:
-    lda #%10010000  ; enable NMI
-    sta $2000
-    lda #%00011110  ; enable spr/BG
-    sta $2001
+LoadPlayingCont:
 
-    lda #$20
-    sta player1_y
-    sta player1_x
-    sta player1_sword_y
-    clc
-	adc #$07
-    sta player1_sword_x
     lda #$00
     sta player1_spr
     lda #$20
-    sta player1_sword_spr
+    sta player1_sword1_spr
     lda #$00
     sta PLAYER1_ATTR
-    sta PLAYER1_SWORD_ATTR
+    sta PLAYER1_SWORD1_ATTR
+    sta PLAYER1_SWORD2_ATTR
+    sta PLAYER1_SWORD3_ATTR
+    sta PLAYER1_SWORD4_ATTR
 
-    lda #$30
-    sta player2_y
-    sta player2_x
-    sta player2_sword_y
-    sec
-	sbc #$08
-    sta player2_sword_x
-    lda #$01
+    lda #$00
     sta player2_spr
-    lda #$30
-    sta player2_sword_spr
+    lda #$20
+    sta player2_sword1_spr
     lda #$01
     sta PLAYER2_ATTR
-    sta PLAYER2_SWORD_ATTR
+    sta PLAYER2_SWORD1_ATTR
+    sta PLAYER2_SWORD2_ATTR
+    sta PLAYER2_SWORD3_ATTR
+    sta PLAYER2_SWORD4_ATTR
 
     lda #LIFE_INIT
     sta player1_life
@@ -179,10 +177,7 @@ loadPlayingCont:
     sta player1_speed_level
     sta player2_speed_level
 
-    lda #$50
-    sta player1_sword_counter
-    sta player2_sword_counter
-
+    ; set player1 random
     lda #$00
     sta tmp3
 .1:
@@ -193,16 +188,16 @@ loadPlayingCont:
     tax
     lda randomXTable, x
     sta player1_x
-    sta player1_sword_x
 
     lda tmp3
     and #$3F
     tax
     lda randomYTable, x
     sta player1_y
-    sta player1_sword_y
     dec player1_y
-    dec player1_sword_y
+
+    lda #DIRECTION_DOWN
+    sta player1_direction
 
     lda player1_x
     sta tmp
@@ -212,6 +207,7 @@ loadPlayingCont:
     cmp #FLOOR
     bne .1
 
+    ; set player2 random
     lda tmp3
     adc general_counter
     sta tmp3
@@ -222,25 +218,30 @@ loadPlayingCont:
     and #$3F
     tax
     lda randomXTable, x
-    sta player1_x
-    sta player1_sword_x
+    sta player2_x
 
     lda tmp3
     and #$3F
     tax
     lda randomYTable, x
-    sta player1_y
-    sta player1_sword_y
-    dec player1_y
-    dec player1_sword_y
+    sta player2_y
+    dec player2_y
 
-    lda player1_x
+    lda player2_x
     sta tmp
-    lda player1_y
+    lda player2_y
     sta tmp2
     jsr checkTile
     cmp #FLOOR
     bne .2
 
+    lda #$00
+    sta player1_sword_level
+    sta player2_sword_level
+
+    lda #%10010000  ; enable NMI
+    sta $2000
+    lda #%00011110  ; enable spr/BG
+    sta $2001
 
     rts
