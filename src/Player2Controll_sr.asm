@@ -354,7 +354,7 @@ Player2Controll:
     sta $4001
     lda #%00000100
     sta $4002
-    lda #%11100100
+    lda #%11100001
     sta $4003
 
     lda #$50

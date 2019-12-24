@@ -214,7 +214,7 @@ Player2SwordHit:
     sta $4015
     lda #%11000001
     sta $400C
-    lda #%00001100
+    lda #%00000100
     sta $400E
     lda #%00010011
     sta $400F
