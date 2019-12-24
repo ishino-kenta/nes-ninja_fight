@@ -57,62 +57,6 @@ SWORD_MAX = $04
 
 FLOOR = $02
 
-; Sprite Address
-PLAYER1_Y = $0200
-PLAYER1_SPR = $0201
-PLAYER1_ATTR = $0202
-PLAYER1_X = $0203
-
-PLAYER2_Y = $0204
-PLAYER2_SPR = $0205
-PLAYER2_ATTR = $0206
-PLAYER2_X = $0207
-
-PLAYER1_SWORD1_Y = $0208
-PLAYER1_SWORD1_SPR = $0209
-PLAYER1_SWORD1_ATTR = $020A
-PLAYER1_SWORD1_X = $020B
-
-PLAYER2_SWORD1_Y = $020C
-PLAYER2_SWORD1_SPR = $020D
-PLAYER2_SWORD1_ATTR = $020E
-PLAYER2_SWORD1_X = $020F
-
-PLAYER1_SWORD2_Y = $0210
-PLAYER1_SWORD2_SPR = $0211
-PLAYER1_SWORD2_ATTR = $0212
-PLAYER1_SWORD2_X = $0213
-
-PLAYER2_SWORD2_Y = $0214
-PLAYER2_SWORD2_SPR = $0215
-PLAYER2_SWORD2_ATTR = $0216
-PLAYER2_SWORD2_X = $0217
-
-PLAYER1_SWORD3_Y = $0218
-PLAYER1_SWORD3_SPR = $0219
-PLAYER1_SWORD3_ATTR = $021A
-PLAYER1_SWORD3_X = $021B
-
-PLAYER2_SWORD3_Y = $021C
-PLAYER2_SWORD3_SPR = $021D
-PLAYER2_SWORD3_ATTR = $021E
-PLAYER2_SWORD3_X = $021F
-
-PLAYER1_SWORD4_Y = $0220
-PLAYER1_SWORD4_SPR = $0221
-PLAYER1_SWORD4_ATTR = $0222
-PLAYER1_SWORD4_X = $0223
-
-PLAYER2_SWORD4_Y = $0224
-PLAYER2_SWORD4_SPR = $0225
-PLAYER2_SWORD4_ATTR = $0226
-PLAYER2_SWORD4_X = $0227
-
-ITEM_Y = $0228
-ITEM_SPR = $0229
-ITEM_ATTR = $022A
-ITEM_X = $022B
-
 ;Declare some macros here
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -132,13 +76,7 @@ controller2pre .rs 1
 
 game_state  .rs 1
 
-player1_x   .rs 1
-player1_y   .rs 1
-player1_spr .rs 1
 player1_stelth  .rs 1
-player1_sword1_x   .rs 1
-player1_sword1_y   .rs 1
-player1_sword1_spr   .rs 1
 player1_sword_state .rs 1
 player1_sword_hit   .rs 1
 player1_life    .rs 1
@@ -148,13 +86,8 @@ player1_speed_level   .rs 1
 player1_move_flag   .rs 1
 
 
-player2_x   .rs 1
-player2_y   .rs 1
-player2_spr .rs 1
+
 player2_stelth  .rs 1
-player2_sword1_x   .rs 1
-player2_sword1_y   .rs 1
-player2_sword1_spr   .rs 1
 player2_sword_state .rs 1
 player2_sword_hit   .rs 1
 player2_life    .rs 1
@@ -174,14 +107,10 @@ source_addr_high   .rs 1
 ppu_addr_low    .rs 1
 ppu_addr_high   .rs 1
 general_counter .rs 1
-arg .rs 1   ; argument for subroutine
 
 walk_counter    .rs 1
 
 item_flag .rs 1
-item_x  .rs 1
-item_y  .rs 1
-item_spr    .rs 1
 item_kind   .rs 1
 item_counter    .rs 2
 item_counter_inc    .rs 1
@@ -198,30 +127,67 @@ player2_sword_counter   .rs 1
 player1_sword_level    .rs 1
 player2_sword_level    .rs 1
 
-player1_sword2_x   .rs 1
-player1_sword2_y   .rs 1
-player1_sword2_spr   .rs 1
-player1_sword3_x   .rs 1
-player1_sword3_y   .rs 1
-player1_sword3_spr   .rs 1
-player1_sword4_x   .rs 1
-player1_sword4_y   .rs 1
-player1_sword4_spr   .rs 1
 
 player1_direction   .rs 1
 
-player2_sword2_x   .rs 1
-player2_sword2_y   .rs 1
-player2_sword2_spr   .rs 1
-player2_sword3_x   .rs 1
-player2_sword3_y   .rs 1
-player2_sword3_spr   .rs 1
-player2_sword4_x   .rs 1
-player2_sword4_y   .rs 1
-player2_sword4_spr   .rs 1
-
 player2_direction   .rs 1
 
+
+    .rsset $0200
+player1_y   .rs 1
+player1_spr .rs 1
+player1_attr    .rs 1
+player1_x   .rs 1
+
+player2_y   .rs 1
+player2_spr .rs 1
+player2_attr    .rs 1
+player2_x   .rs 1
+
+player1_sword1_y   .rs 1
+player1_sword1_spr   .rs 1
+player1_sword1_attr   .rs 1
+player1_sword1_x   .rs 1
+
+player1_sword2_y   .rs 1
+player1_sword2_spr   .rs 1
+player1_sword2_attr   .rs 1
+player1_sword2_x   .rs 1
+
+player1_sword3_y   .rs 1
+player1_sword3_spr   .rs 1
+player1_sword3_attr   .rs 1
+player1_sword3_x   .rs 1
+
+player1_sword4_y   .rs 1
+player1_sword4_spr   .rs 1
+player1_sword4_attr   .rs 1
+player1_sword4_x   .rs 1
+
+player2_sword1_y   .rs 1
+player2_sword1_spr   .rs 1
+player2_sword1_attr   .rs 1
+player2_sword1_x   .rs 1
+
+player2_sword2_y   .rs 1
+player2_sword2_spr   .rs 1
+player2_sword2_attr   .rs 1
+player2_sword2_x   .rs 1
+
+player2_sword3_y   .rs 1
+player2_sword3_spr   .rs 1
+player2_sword3_attr   .rs 1
+player2_sword3_x   .rs 1
+
+player2_sword4_y   .rs 1
+player2_sword4_spr   .rs 1
+player2_sword4_attr   .rs 1
+player2_sword4_x   .rs 1
+
+item_y  .rs 1
+item_spr    .rs 1
+item_attr    .rs 1
+item_x  .rs 1
 
 ;Initial settings
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -325,17 +291,15 @@ TitleAttrs:
 Forever:
     jmp Forever
 
+titleNametable:
+    .incbin "src/graphic/title.tile"
+titleAttr:
+    .incbin "src/graphic/title.attr"
+
+
 ;Main Loop
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 NMI:
-
-    lda #%10010000  ; PPU clean up
-    sta $2000
-    lda #%00011110
-    sta $2001
-    lda #$00
-    sta $2005
-    sta $2005
 
     inc general_counter
 
@@ -351,6 +315,7 @@ GameEngine:
     cmp #STATE_PLAYING
     bne .over
     jsr EnginePlaying
+    jmp .done
 .over:
     lda game_state
     cmp #STATE_OVER
@@ -377,33 +342,29 @@ GameEngine:
 IRQ:
 
     rti
-
-
-    .include "src/Subroutine.asm"
-    .include "src/SubroutinePlaying.asm"
-
-;Some datas
-;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
 palette:
     .incbin "src/graphic/palette.pal"
 
-titleNametable:
-    .incbin "src/graphic/title.tile"
-titleAttr:
-    .incbin "src/graphic/title.attr"
-
-playingNametable:
-    .incbin "src/graphic/playing.tile"
-playingAttr:
-    .incbin "src/graphic/playing.attr"
-
 winerWindow:
     .incbin "src/graphic/winner_window.tile"
+
 winerWindowAttr1:
     .incbin "src/graphic/winner_window1.attr"
 winerWindowAttr2:
     .incbin "src/graphic/winner_window2.attr"
+
+
+    .include "src/Subroutine.asm"
+
+;Some datas
+;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+
+
+
+
+
 
 ;Vectors
 ;@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@

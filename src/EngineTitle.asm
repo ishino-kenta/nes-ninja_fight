@@ -1,5 +1,13 @@
 EngineTitle:
 
+    lda #%10010000  ; PPU clean up
+    sta $2000
+    lda #%00011110
+    sta $2001
+    lda #$00
+    sta $2005
+    sta $2005
+
     jsr ReadController1
     jsr ReadController2
 
@@ -140,25 +148,21 @@ LoadPlayingCont:
 
     lda #$00
     sta player1_spr
-    lda #$20
-    sta player1_sword1_spr
     lda #$00
-    sta PLAYER1_ATTR
-    sta PLAYER1_SWORD1_ATTR
-    sta PLAYER1_SWORD2_ATTR
-    sta PLAYER1_SWORD3_ATTR
-    sta PLAYER1_SWORD4_ATTR
+    sta player1_attr
+    sta player1_sword1_attr
+    sta player1_sword2_attr
+    sta player1_sword3_attr
+    sta player1_sword4_attr
 
     lda #$00
     sta player2_spr
-    lda #$20
-    sta player2_sword1_spr
     lda #$01
-    sta PLAYER2_ATTR
-    sta PLAYER2_SWORD1_ATTR
-    sta PLAYER2_SWORD2_ATTR
-    sta PLAYER2_SWORD3_ATTR
-    sta PLAYER2_SWORD4_ATTR
+    sta player2_attr
+    sta player2_sword1_attr
+    sta player2_sword2_attr
+    sta player2_sword3_attr
+    sta player2_sword4_attr
 
     lda #LIFE_INIT
     sta player1_life
@@ -203,7 +207,7 @@ LoadPlayingCont:
     sta tmp
     lda player1_y
     sta tmp2
-    jsr checkTile
+    jsr CheckTile
     cmp #FLOOR
     bne .1
 
@@ -231,7 +235,7 @@ LoadPlayingCont:
     sta tmp
     lda player2_y
     sta tmp2
-    jsr checkTile
+    jsr CheckTile
     cmp #FLOOR
     bne .2
 
@@ -244,4 +248,10 @@ LoadPlayingCont:
     lda #%00011110  ; enable spr/BG
     sta $2001
 
+
     rts
+
+playingNametable:
+    .incbin "src/graphic/playing.tile"
+playingAttr:
+    .incbin "src/graphic/playing.attr"

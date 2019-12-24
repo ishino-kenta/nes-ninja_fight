@@ -42,7 +42,7 @@ ReadController2:
 ; A: tile number
 ;memory
 ; tmp, tmp2
-checkTile:
+CheckTile:
     
     lda #LOW(playingNametable)
     sta source_addr_low
@@ -90,7 +90,7 @@ checkTile:
 ; A: tile number
 ;memory
 ; tmp, tmp2
-checkTilePlayer2:
+CheckTilePlayer2:
     stx tmp
     sty tmp2
     

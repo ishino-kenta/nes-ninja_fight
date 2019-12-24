@@ -1,6 +1,6 @@
 EngineOver:
 
-showWinnerWindow:
+ShowWinnerWindow:
     lda window_counter
     cmp #$A0
     beq .done
@@ -35,8 +35,8 @@ showWinnerWindow:
 .done:
     lda window_counter
     cmp #$A0
-    beq showWinnerWindowAttrDone
-showWinnerWindowAttr:
+    beq ShowWinnerWindowAttrDone
+ShowWinnerWindowAttr:
     lda window_counter
     lsr a
     lsr a
@@ -88,10 +88,10 @@ showWinnerWindowAttr:
     clc
 	adc #$10
     sta window_counter
-showWinnerWindowAttrDone:
+ShowWinnerWindowAttrDone:
 
 
-showWinner:
+ShowWinner:
     lda #$23
     sta $2006
     lda #$10

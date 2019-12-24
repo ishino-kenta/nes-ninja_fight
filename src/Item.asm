@@ -26,7 +26,7 @@ CheckItemCounter:
     sta tmp
     lda item_y
     sta tmp2
-    jsr checkTile
+    jsr CheckTile
     cmp #FLOOR
     bne .1
 
@@ -69,11 +69,5 @@ CheckItemCounter:
 .done:
 
     ; set item sprite
-    lda item_x
-    sta ITEM_X
-    lda item_y
-    sta ITEM_Y
-    lda item_spr
-    sta ITEM_SPR
     lda #$02
-    sta ITEM_ATTR
+    sta item_attr

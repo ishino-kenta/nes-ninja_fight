@@ -25,9 +25,7 @@ EnginePlaying:
     jsr Player2Controll
 
     jsr Player1SpriteUpdate
-    jsr Player1SpriteDraw
     jsr Player2SpriteUpdate
-    jsr Player2SpriteDraw
 
     jsr Player1SwordHit
     jsr Player2SwordHit
@@ -38,6 +36,28 @@ EnginePlaying:
 
 
     rts
+
+swordPosition:
+;   .db i1x,s1x,i1y,s1y, i2x,s2x,i2y,s2y, i3x,s3x,i3y,s3y, i4x,s4x,i4y,s4y 
+    .db $00,$07,$00,$00, $00,$07,$00,$00, $00,$07,$00,$00, $00,$07,$00,$00 ; right
+    .db $00,$F8,$00,$00, $00,$F8,$00,$00, $00,$F8,$00,$00, $00,$F8,$00,$00 ; left
+    .db $00,$00,$00,$08, $00,$00,$00,$08, $00,$00,$00,$08, $00,$00,$00,$08 ; down
+    .db $00,$00,$00,$F8, $00,$00,$00,$F8, $00,$00,$00,$F8, $00,$00,$00,$F8 ; up
+
+    .db $00,$07,$00,$00, $00,$0F,$01,$00, $00,$0F,$01,$00, $00,$0F,$01,$00 ; right
+    .db $00,$F8,$00,$00, $00,$F0,$FF,$00, $00,$F0,$FF,$00, $00,$F0,$FF,$00 ; left
+    .db $00,$00,$00,$08, $01,$00,$00,$10, $01,$00,$00,$10, $01,$00,$00,$10 ; down
+    .db $00,$00,$00,$F8, $FF,$00,$00,$F0, $FF,$00,$00,$F0, $FF,$00,$00,$F0 ; up
+
+    .db $00,$07,$00,$00, $00,$0F,$01,$00, $00,$17,$02,$00, $00,$17,$02,$00 ; right
+    .db $00,$F8,$00,$00, $00,$F0,$FF,$00, $00,$E8,$FE,$00, $00,$E8,$FE,$00 ; left
+    .db $00,$00,$00,$08, $01,$00,$00,$10, $02,$00,$00,$18, $02,$00,$00,$18 ; down
+    .db $00,$00,$00,$F8, $FF,$00,$00,$F0, $FE,$00,$00,$E8, $FE,$00,$00,$E8 ; up
+
+    .db $00,$07,$00,$00, $00,$0F,$01,$00, $00,$17,$02,$00, $00,$1F,$03,$00 ; right
+    .db $00,$F8,$00,$00, $00,$F0,$FF,$00, $00,$E8,$FE,$00, $00,$E0,$FD,$00 ; left
+    .db $00,$00,$00,$08, $01,$00,$00,$10, $02,$00,$00,$18, $03,$00,$00,$20 ; down
+    .db $00,$00,$00,$F8, $FF,$00,$00,$F0, $FE,$00,$00,$E8, $FD,$00,$00,$E0 ; up
 
 
 randomXTable:
@@ -89,8 +109,6 @@ swordTable:
 
     .include "src/Player1SpriteUpdate_sr.asm"
     .include "src/Player2SpriteUpdate_sr.asm"
-
-    .include "src/PlayerSpriteDraw_sr.asm"
 
     .include "src/ItemList_sr.asm"
     

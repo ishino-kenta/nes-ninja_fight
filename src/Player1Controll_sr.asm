@@ -86,7 +86,7 @@ Player1Controll:
     clc
     adc .downTable+2, x
     sta tmp2
-    jsr checkTile
+    jsr CheckTile
     cmp #FLOOR
     beq .1b
     lda tmp4
@@ -156,7 +156,7 @@ Player1Controll:
     clc
     adc .rightTable+2, x
     sta tmp2
-    jsr checkTile
+    jsr CheckTile
     cmp #FLOOR
     beq .2b
     lda tmp4
@@ -229,7 +229,7 @@ Player1Controll:
     clc
     adc .leftTable+2, x
     sta tmp2
-    jsr checkTile
+    jsr CheckTile
     cmp #FLOOR
     beq .3b
     lda tmp4
@@ -299,7 +299,7 @@ Player1Controll:
     clc
     adc .upTable+2, x
     sta tmp2
-    jsr checkTile
+    jsr CheckTile
     cmp #FLOOR
     beq .4b
     lda tmp4

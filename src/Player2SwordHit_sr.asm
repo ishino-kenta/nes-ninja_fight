@@ -241,7 +241,7 @@ Player2SwordHit:
     sta tmp
     lda player1_y
     sta tmp2
-    jsr checkTile
+    jsr CheckTile
     cmp #FLOOR
     bne .1
 
